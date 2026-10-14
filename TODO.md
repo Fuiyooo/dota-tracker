@@ -10,12 +10,14 @@ Cakupan: multi-akun, search bebas
 
 ## 0. Persiapan & Prasyarat
 
-- [ ] Siapkan **Steam Web API key** (https://steamcommunity.com/dev/apikey) — untuk resolve vanity URL + `GetPlayerSummaries`
-- [ ] Siapkan **STRATZ API token** (login Steam/Discord di https://stratz.com/api)
+- [x] Siapkan **Steam Web API key** (https://steamcommunity.com/dev/apikey) — untuk resolve vanity URL + `GetPlayerSummaries` → sudah di `.env`, terverifikasi (GetPlayerSummaries balas HTTP 200)
+- [x] Siapkan **STRATZ API token** (login Steam/Discord di https://stratz.com/api) → sudah di `.env`, berlaku sampai 2027-10-14. **Wajib kirim header `User-Agent`**, tanpa itu Cloudflare balas HTTP 403 "Just a moment..."
 - [x] Pastikan Node.js >= 20 terpasang → v26.10.0
 - [x] Pastikan pnpm terpasang → v12.11.2 via `npm i -g pnpm`. Catatan: Node 26 tidak lagi membundel `corepack`, jadi `corepack enable pnpm` tidak tersedia
 - [x] Pastikan Docker + Docker Compose terpasang → Docker 29.9.0 + Compose 5.6.0. **Tidak dipakai untuk DB**; memakai PostgreSQL 18.6 native (`postgresql.service`) karena port 5432 sudah terpakai
-- [ ] Pastikan akun Dota target mengaktifkan *"Expose Public Match Data"*
+- [x] Pastikan akun Dota target mengaktifkan *"Expose Public Match Data"* → `recentMatches` terisi 20 match (terbaru 2026-10-13)
+
+**Akun uji:** account_id `1061259054` · SteamID64 `76561199021524782` · "Nyenyenye" — Archon 1, `computed_mmr` ≈ 3960, 462W/496L
 
 ---
 
@@ -91,7 +93,8 @@ Cakupan: multi-akun, search bebas
 
 ## 5. Integrasi STRATZ
 
-- [ ] Setup GraphQL client + auth header token
+- [ ] Setup GraphQL client + auth header token. **Header `User-Agent` wajib** (mis. `dota-tracker/0.1 (+https://github.com/Fuiyooo/dota-tracker)`); tanpa itu Cloudflare balas HTTP 403 "Just a moment..." — itu bukan tanda token salah
+- [x] Auth token terverifikasi: `{ player(steamAccountId: 22202) { steamAccountId } }` → HTTP 200
 - [ ] **Verifikasi schema via GraphiQL** — konfirmasi field MMR per match:
   - [ ] `player(steamAccountId)` -> rank, seasonRank, mmr
   - [ ] `player.matches` -> list match
