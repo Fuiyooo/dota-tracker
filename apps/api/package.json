@@ -1,0 +1,14 @@
+{
+  "name": "@dota/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc -p tsconfig.json --noEmit --watch",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dota/shared": "workspace:*"
+  }
+}

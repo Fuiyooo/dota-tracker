@@ -1,0 +1,18 @@
+{
+  "name": "dota-tracker",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r build && pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
+  }
+}
