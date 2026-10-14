@@ -12,28 +12,28 @@ Cakupan: multi-akun, search bebas
 
 - [ ] Siapkan **Steam Web API key** (https://steamcommunity.com/dev/apikey) — untuk resolve vanity URL + `GetPlayerSummaries`
 - [ ] Siapkan **STRATZ API token** (login Steam/Discord di https://stratz.com/api)
-- [ ] Pastikan Node.js >= 20 terpasang
-- [ ] Pastikan pnpm terpasang (`corepack enable pnpm`)
-- [ ] Pastikan Docker + Docker Compose terpasang (opsional, untuk Postgres/Redis)
+- [x] Pastikan Node.js >= 20 terpasang → v26.10.0
+- [x] Pastikan pnpm terpasang → v12.11.2 via `npm i -g pnpm`. Catatan: Node 26 tidak lagi membundel `corepack`, jadi `corepack enable pnpm` tidak tersedia
+- [x] Pastikan Docker + Docker Compose terpasang → Docker 29.9.0 + Compose 5.6.0. **Tidak dipakai untuk DB**; memakai PostgreSQL 18.6 native (`postgresql.service`) karena port 5432 sudah terpakai
 - [ ] Pastikan akun Dota target mengaktifkan *"Expose Public Match Data"*
 
 ---
 
 ## 1. Skeleton Monorepo
 
-- [ ] Buat folder `~/Projects/dota-tracker`
-- [ ] Init `pnpm-workspace.yaml`
-- [ ] Buat struktur:
+- [x] Buat folder `~/Projects/dota-tracker`
+- [x] Init `pnpm-workspace.yaml`
+- [x] Buat struktur:
   - `apps/api` — Fastify + TypeScript
-  - `apps/web` — React + Vite
+  - `apps/web` — React + Vite (masih placeholder, diisi Bagian 9)
   - `packages/shared` — tipe + zod schema
   - `drizzle/` — migrasi DB
-  - `docker-compose.yml`
-- [ ] Setup `tsconfig.base.json` + path alias antar package
-- [ ] Setup ESLint + Prettier
-- [ ] Setup `.gitignore` (node_modules, .env, *.db, dist)
-- [ ] Init git repo + commit awal
-- [ ] Setup `.env.example`:
+  - `docker-compose.yml` → **ditunda ke Bagian 12** (DB pakai Postgres native)
+- [x] Setup `tsconfig.base.json`. Catatan: tanpa `paths`/`baseUrl` — resolusi `@dota/shared` lewat symlink workspace + `exports`/`types`; TypeScript 7 sudah menghapus `baseUrl`
+- [ ] Setup ESLint + Prettier → Prettier ✓ (`.prettierrc.json`), **ESLint ditunda** sampai ada kode nyata
+- [x] Setup `.gitignore` (node_modules, .env, *.db, dist)
+- [x] Init git repo + commit awal
+- [x] Setup `.env.example`:
   - `DATABASE_URL`
   - `STEAM_API_KEY`
   - `OPENDOTA_API_KEY` (opsional)
@@ -45,14 +45,15 @@ Cakupan: multi-akun, search bebas
 
 ## 2. Package `shared`
 
-- [ ] Definisi tipe domain: `Player`, `Match`, `MatchPlayer`, `Hero`, `MmrSnapshot`
-- [ ] Zod schema untuk request/response API
-- [ ] Enum `MmrSource = 'stratz' | 'estimate'`
-- [ ] Helper konversi SteamID:
-  - [ ] `steamId64ToAccountId()` (kurangi `76561197960265728`)
-  - [ ] `accountIdToSteamId64()`
-  - [ ] Deteksi format input (account_id / steamid64 / vanity URL)
-- [ ] Konstanta rank tier -> label medal (Herald..Immortal + leaderboard)
+- [x] Definisi tipe domain: `Player`, `Match`, `MatchPlayer`, `Hero`, `MmrSnapshot` (zod schema + `z.infer`, satu file per domain)
+- [x] Zod schema untuk request/response API (`src/api.ts`: param `:accountId`, pagination, search, body track)
+- [x] Enum `MmrSource = 'stratz' | 'estimate'` (`mmrSourceSchema` di `src/mmr.ts`)
+- [x] Helper konversi SteamID (`src/steam-id.ts`, wajib **BigInt** karena SteamID64 > `Number.MAX_SAFE_INTEGER`):
+  - [x] `steamId64ToAccountId()` (kurangi `76561197960265728`)
+  - [x] `accountIdToSteamId64()`
+  - [x] Deteksi format input (account_id / steamid64 / vanity URL / SteamID3 / URL OpenDota)
+- [x] Konstanta rank tier -> label medal (Herald..Immortal + leaderboard) (`src/ranks.ts`)
+- [x] Ekstra: unit test vitest untuk SteamID + rank (19 tes) — dimajukan dari Bagian 11
 
 ---
 
@@ -174,7 +175,8 @@ Cakupan: multi-akun, search bebas
 
 ## 11. Testing & Kualitas
 
-- [ ] Unit test: helper SteamID, parsing rank tier, TTL cache
+- [x] Unit test: helper SteamID, parsing rank tier → 19 tes vitest di `packages/shared`
+- [ ] Unit test: TTL cache
 - [ ] Unit test: client OpenDota/STRATZ (mock HTTP)
 - [ ] Integration test: endpoint API (SQLite in-memory)
 - [ ] Test idempotensi sync
