@@ -61,17 +61,17 @@ Cakupan: multi-akun, search bebas
 
 ## 3. Database & Migrasi
 
-- [ ] Init Drizzle ORM + konfigurasi driver (SQLite dev -> Postgres prod)
-- [ ] Buat tabel:
-  - [ ] `players` (account_id PK, steam_id64, personaname, avatar, rank_tier, leaderboard_rank, computed_mmr, tracking_enabled, last_synced_at)
-  - [ ] `matches` (match_id PK, start_time, duration, radiant_win, game_mode, lobby_type, average_rank, radiant_score, dire_score)
-  - [ ] `match_players` (match_id, account_id, hero_id, is_radiant, player_slot, kills, deaths, assists, gpm, xpm, last_hits, hero_damage, hero_healing, mmr_before, mmr_after, mmr_delta, mmr_source) PK(match_id, account_id)
-  - [ ] `heroes` (hero_id PK, name, localized_name, img, primary_attr, roles)
-  - [ ] `mmr_snapshots` (id PK, account_id, recorded_at, rank_tier, leaderboard_rank, computed_mmr, source)
-  - [ ] `sync_logs` (id PK, account_id, scope, started_at, finished_at, status, error)
-- [ ] Buat index: `match_players(account_id, hero_id)`, `mmr_snapshots(account_id, recorded_at)`, `matches(start_time)`
-- [ ] Generate + jalankan migrasi pertama
-- [ ] Seed data hero dari OpenDota `/heroStats`
+- [x] Init Drizzle ORM + konfigurasi driver → `drizzle-orm` + `postgres` (postgres.js) + `drizzle-kit`. Postgres native dipakai untuk dev **dan** prod (bukan SQLite dev → Postgres prod)
+- [x] Buat tabel:
+  - [x] `players` (account_id PK, steam_id64, personaname, avatar, rank_tier, leaderboard_rank, computed_mmr, tracking_enabled, last_synced_at). Catatan: `computed_mmr` **double precision** (OpenDota mengirim desimal)
+  - [x] `matches` (match_id PK, start_time, duration, radiant_win, game_mode, lobby_type, average_rank, radiant_score, dire_score). Catatan: `match_id` **bigint** (match asli 9043331899 > batas integer 32-bit)
+  - [x] `match_players` (match_id, account_id, hero_id, is_radiant, player_slot, kills, deaths, assists, gpm, xpm, last_hits, hero_damage, hero_healing, mmr_before, mmr_after, mmr_delta, mmr_source) PK(match_id, account_id). Tanpa FK ke `players`/`heroes` (1 match berisi 10 pemain; hero baru bisa muncul sebelum seed ulang)
+  - [x] `heroes` (hero_id PK, name, localized_name, img, primary_attr, roles → `text[]`)
+  - [x] `mmr_snapshots` (id PK, account_id, recorded_at, rank_tier, leaderboard_rank, computed_mmr, source)
+  - [x] `sync_logs` (id PK, account_id, scope, started_at, finished_at, status, error)
+- [x] Buat index: `match_players(account_id, hero_id)`, `mmr_snapshots(account_id, recorded_at)`, `matches(start_time)`
+- [x] Generate + jalankan migrasi pertama → `drizzle/0000_abandoned_warbird.sql`, 6 tabel terpasang di `dota_tracker`
+- [x] Seed data hero dari OpenDota `/heroStats` → 127 hero, idempoten (upsert)
 
 ---
 

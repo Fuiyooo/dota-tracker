@@ -13,7 +13,7 @@ export const mmrSnapshotSchema = z.object({
   recorded_at: z.number().int(), // epoch detik (UTC)
   rank_tier: z.number().int().nullable(),
   leaderboard_rank: z.number().int().nullable(),
-  computed_mmr: z.number().int().nullable(),
+  computed_mmr: z.number().nullable(), // desimal, mis. 3960.07 (bukan integer)
   source: mmrSourceSchema,
 });
 export type MmrSnapshot = z.infer<typeof mmrSnapshotSchema>;

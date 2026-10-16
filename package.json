@@ -10,10 +10,14 @@
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r build && pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "pnpm --filter @dota/api seed"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "drizzle-kit": "^0.31.11",
     "typescript": "^7.0.2"
   }
 }

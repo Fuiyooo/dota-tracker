@@ -7,7 +7,7 @@ export const playerSchema = z.object({
   avatar: z.string().nullable(),
   rank_tier: z.number().int().nullable(),
   leaderboard_rank: z.number().int().nullable(),
-  computed_mmr: z.number().int().nullable(),
+  computed_mmr: z.number().nullable(), // desimal, mis. 3960.07 (bukan integer)
   tracking_enabled: z.boolean(),
   last_synced_at: z.number().int().nullable(), // epoch detik (UTC)
 });
