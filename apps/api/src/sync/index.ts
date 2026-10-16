@@ -1,6 +1,7 @@
 export { syncHeroes } from './heroes.js';
 export { syncPlayerProfile } from './players.js';
 export { syncMatchDetail, syncPlayerMatches } from './matches.js';
+export { snapshotMmr, type SnapshotResult, type MmrChange } from './mmr.js';
 export { withSyncLog, epochNow, type SyncScope, type SyncStatus } from './logs.js';
 
 import { syncPlayerMatches } from './matches.js';

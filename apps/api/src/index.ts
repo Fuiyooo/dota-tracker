@@ -1,6 +1,7 @@
 import { client as dbClient } from './db/client.js';
 import { env } from './env.js';
 import { logger } from './logger.js';
+import { startScheduler, stopScheduler } from './scheduler.js';
 import { buildServer } from './server.js';
 
 const app = buildServer();
@@ -13,6 +14,8 @@ try {
   });
   process.exit(1);
 }
+
+startScheduler();
 
 const SHUTDOWN_TIMEOUT_MS = 5_000;
 
@@ -29,8 +32,8 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     }, SHUTDOWN_TIMEOUT_MS);
     forceExit.unref();
 
-    void app
-      .close()
+    void stopScheduler()
+      .then(() => app.close())
       // Tanpa `timeout`, postgres.js menunggu koneksi menutup tanpa batas.
       .then(() => dbClient.end({ timeout: 5 }))
       .then(() => process.exit(0))

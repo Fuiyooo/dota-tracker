@@ -146,11 +146,23 @@ average_rank .......... terisi (46, 43, 39, ...) - tadinya selalu kosong
 
 ## 7. MMR Snapshot Job
 
-- [ ] Job `snapshotMmr()`: ambil `computed_mmr` + rank tiap akun yang `tracking_enabled`
-- [ ] Simpan ke `mmr_snapshots` (`source='estimate'`)
-- [ ] Hitung delta antar snapshot, atribusi ke match terakhir
-- [ ] Scheduler `node-cron` (interval dari `SYNC_INTERVAL_CRON`)
+**Selesai** (kecuali BullMQ yang memang opsional).
+
+- [x] Job `snapshotMmr()` — ambil `computed_mmr` + rank tiap akun yang `tracking_enabled` (`sync/mmr.ts`). Satu akun gagal **tidak** membatalkan batch; kegagalannya dikumpulkan di `failures`
+- [x] Simpan ke `mmr_snapshots` (`source='estimate'`). Catatan: `computed_mmr` adalah **perkiraan** OpenDota, bukan MMR resmi — dan nilainya tidak selalu cocok dengan `rank_tier` (akun uji: Archon 1 tetapi 3935.88). `rank_tier`/`leaderboard_rank` sendiri andal karena dari Valve
+- [x] Hitung delta antar snapshot + atribusi ke match terakhir → `listMmrHistory()` di `queries/mmr.ts`. Delta **tidak** disimpan di tabel (skema `mmr_snapshots` tidak punya kolomnya), melainkan dihitung terhadap snapshot sebelumnya, dan tiap entri diberi `match_id` match terakhir pemain pada/sebelum `recorded_at`
+- [x] Scheduler `node-cron` dengan interval dari `SYNC_INTERVAL_CRON` (`scheduler.ts`, dijalankan dari `index.ts`). Memakai `noOverlap` supaya eksekusi tidak bertumpuk, dan `unref` agar timer tidak menahan proses saat shutdown
 - [ ] (Opsional) Migrasi ke BullMQ + Redis untuk job queue
+- [ ] (Opsional, dari temuan Bagian 5) Impor **histori rank STRATZ** ke `mmr_snapshots` dengan `source='stratz'` — akun uji punya 49 entri sejak 2021, ini bisa langsung mengisi grafik Bagian 9 tanpa menunggu snapshot menumpuk
+
+**Hasil uji:**
+
+```
+sync --snapshot-mmr (ke-1) .. 1/1 akun tersimpan | MMR null -> 3935.88, rank_tier null -> 41
+sync --snapshot-mmr (ke-2) .. 1/1 akun tersimpan | MMR 3935.88 -> 3935.88 (delta 0)
+listMmrHistory(1061259054) .. 2 entri, entri pertama diatribusikan ke match 9047075077
+server startup ............... {"msg":"scheduler dijalankan","cron":"*/30 * * * *","task":"snapshot-mmr"}
+```
 
 ---
 

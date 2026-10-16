@@ -3,7 +3,7 @@ import { db } from '../db/client.js';
 import { syncLogs } from '../db/schema.js';
 import { logger } from '../logger.js';
 
-export type SyncScope = 'heroes' | 'profile' | 'matches' | 'match_detail';
+export type SyncScope = 'heroes' | 'profile' | 'matches' | 'match_detail' | 'mmr_snapshot';
 export type SyncStatus = 'running' | 'success' | 'error';
 
 /** Semua kolom waktu di proyek ini memakai epoch detik, bukan timestamptz. */
