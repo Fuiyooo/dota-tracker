@@ -94,14 +94,27 @@ Cakupan: multi-akun, search bebas
 
 ## 5. Integrasi STRATZ
 
-- [ ] Setup GraphQL client + auth header token. **Header `User-Agent` wajib** (mis. `dota-tracker/0.1 (+https://github.com/Fuiyooo/dota-tracker)`); tanpa itu Cloudflare balas HTTP 403 "Just a moment..." — itu bukan tanda token salah
-- [x] Auth token terverifikasi: `{ player(steamAccountId: 22202) { steamAccountId } }` → HTTP 200
-- [ ] **Verifikasi schema via GraphiQL** — konfirmasi field MMR per match:
-  - [ ] `player(steamAccountId)` -> rank, seasonRank, mmr
-  - [ ] `player.matches` -> list match
-  - [ ] `match(id).players` -> apakah ada `mmrBefore`/`mmrAfter`/delta
-- [ ] Dokumentasikan field yang tersedia di `packages/shared` (komentar)
-- [ ] Fallback: jika MMR per match tidak tersedia, andalkan snapshot (bagian 7)
+**Sudah selesai.** Ringkasan hasil verifikasi:
+
+- [x] Setup GraphQL client + auth header token → `apps/api/src/stratz/client.ts`. Header `User-Agent` **wajib** (tanpa itu Cloudflare balas 403 "Just a moment...", dan itu bukan tanda token salah)
+- [x] **Temuan penting: STRATZ harus diakses lewat HTTP/2.** Cloudflare menantang setiap permintaan HTTP/1.1 dari Node. Diuji: `curl` (HTTP/2) → 200; `undici`/`fetch` → 403 walau header lengkap, walau `allowH2: true`, walau ALPN dipaksa `['h2']`; `node:http2` → 200 di semua varian header. Client memakai `node:http2`, **jangan** "dirapikan" jadi undici seperti client OpenDota
+- [x] Auth token terverifikasi → HTTP 200
+- [x] **Verifikasi schema (16 Okt 2026)** — root query type bernama `DotaQuery`:
+  - `player(steamAccountId: Long) -> PlayerType`
+  - `player.ranks -> [SteamAccountSeasonRankType]` = **DERET WAKTU** `{ seasonRankId, rank, isCore, asOfDateTime }` (akun uji: 49 entri sejak Mei 2021) + `player.leaderboardRanks`
+  - `player.matches(request: PlayerMatchesRequestType) -> [MatchType]`
+  - `match(id: Long) -> MatchType`
+  - **TIDAK ADA `mmrBefore`/`mmrAfter`/`mmrDelta`.** `MatchPlayerType` punya 55 field, satu pun tidak menyangkut MMR
+  - **Tidak ada angka MMR di seluruh schema.** Hanya `PlayerPerformanceType.mmrTier`/`mmrBracket` (tingkat, bukan nilai)
+- [x] Dokumentasikan field yang tersedia (komentar) → di `apps/api/src/stratz/types.ts` dan `packages/shared/src/mmr.ts`
+- [x] Fallback dikonfirmasi: **MMR per match memang tidak tersedia**, jadi MMR selalu `estimate` dari snapshot (Bagian 7)
+
+**Temuan tambahan yang berguna:**
+
+- `MatchType.averageRank` **sering `null`** (pada match uji: null), tetapi `actualRank` dan `rank` **terisi** (44) → pakai salah satu ini untuk mengisi `matches.average_rank`
+- `player.ranks` adalah **histori rank ber-timestamp** → bisa langsung jadi grafik di Bagian 9, tanpa perlu job snapshot
+- `rank` memakai pengkodean sama seperti `rank_tier` OpenDota (`medal*10 + bintang`). **Namun bisa tertinggal**: STRATZ bilang 35 (Crusader 5, entri terbaru Agustus 2026) sedangkan OpenDota bilang 41 (Archon 1) di Oktober 2026 → jadikan OpenDota sebagai acuan rank terkini
+- STRATZ kadang membalas HTTP 200 dengan error internal sementara (`NPGSQL TIMEOUT` saat resolve `match`); client sudah menganggapnya layak di-retry
 
 ---
 
