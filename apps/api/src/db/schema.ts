@@ -61,8 +61,9 @@ export const matchPlayers = pgTable(
     match_id: bigint('match_id', { mode: 'number' })
       .notNull()
       .references(() => matches.match_id),
-    // Sengaja TANPA foreign key ke `players`: satu match berisi 10 pemain,
-    // sementara kita hanya menyimpan baris untuk pemain yang di-track.
+    // Sengaja TANPA foreign key ke `players`: kita menyimpan KESEPULUH pemain
+    // sebuah match, dan hampir semuanya bukan akun yang di-track. Pemain tanpa
+    // `account_id` (profil privat) dilewati saat sync.
     account_id: integer('account_id').notNull(),
     // Sengaja TANPA foreign key ke `heroes`: kalau hero baru dirilis dan match
     // tersinkron sebelum seed hero dijalankan ulang, FK akan menggagalkan sync.

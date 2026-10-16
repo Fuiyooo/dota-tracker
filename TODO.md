@@ -120,13 +120,27 @@ Cakupan: multi-akun, search bebas
 
 ## 6. Sync Layer
 
-- [ ] `syncHeroes()` — upsert daftar hero
-- [ ] `syncPlayerProfile(accountId)` — upsert profil + rank
-- [ ] `syncPlayerMatches(accountId)` — inkremental (simpan match_id terakhir)
-- [ ] `syncMatchDetail(matchId)` — simpan match + match_players
-- [ ] Isi `mmr_delta` dari STRATZ bila tersedia (`mmr_source='stratz'`)
-- [ ] Tulis `sync_logs` tiap run (status, error)
-- [ ] Dedup / idempotent upsert
+**Selesai.** Kode di `apps/api/src/sync/`; CLI: `pnpm --filter @dota/api sync <accountId>`.
+
+- [x] `syncHeroes()` — upsert daftar hero (`sync/heroes.ts`). `pnpm db:seed` kini memanggil ini
+- [x] `syncPlayerProfile(accountId)` — upsert profil + rank (`sync/players.ts`). `tracking_enabled` sengaja **tidak** ikut ditimpa karena itu preferensi pengguna, bukan data OpenDota
+- [x] `syncPlayerMatches(accountId)` — inkremental: hanya match yang belum ada di `match_players` milik pemain itu yang detail-nya diambil. Pemanggilan kedua terbukti mengambil **0 request** tambahan
+- [x] `syncMatchDetail(matchId)` — simpan match + **kesepuluh** pemainnya (yang punya `account_id`)
+- [x] `mmr_delta` dari STRATZ — **tidak bisa diisi**: verifikasi Bagian 5 membuktikan STRATZ tidak menyediakan MMR per match. `mmr_before`/`mmr_after`/`mmr_delta`/`mmr_source` dibiarkan `null` dan hal ini didokumentasikan di kode
+- [x] Tulis `sync_logs` tiap run — `withSyncLog()` mencatat satu baris `running` lalu `success`/`error` beserta pesannya
+- [x] Dedup / idempotent upsert — semua memakai `onConflictDoUpdate`
+- [x] `average_rank` **dihitung** dari rata-rata `rank_tier` kesepuluh pemain, karena `/matches/{id}` tidak menyediakannya
+
+**Hasil uji pada akun 1061259054:**
+
+```
+sync --heroes ......... 127 hero di-upsert
+sync 1061259054 ....... profil Nyenyenye | rank_tier 41 | MMR 3935.88
+                        20 diperiksa, 0 sudah ada, 20 baru disimpan
+sync ulang ............ 20 diperiksa, 20 sudah ada, 0 baru disimpan  (idempoten)
+DB .................... players=1 matches=20 match_players=146 sync_logs=3 (semua success)
+average_rank .......... terisi (46, 43, 39, ...) - tadinya selalu kosong
+```
 
 ---
 
@@ -223,7 +237,7 @@ Cakupan: multi-akun, search bebas
 - [ ] Field `average_rank` OpenDota bisa `null`; `/players/{id}/ratings` bisa kosong -> STRATZ jadi andalan MMR
 - [ ] **`computed_mmr` dari OpenDota tidak cocok dengan `rank_tier`** — pada akun uji: `rank_tier` 41 (Archon 1) tetapi `computed_mmr` 3935.88, padahal Archon 1 biasanya ~2000–2500. Jangan tampilkan `computed_mmr` sebagai "MMR" sebelum diverifikasi di Bagian 7; STRATZ kemungkinan sumber yang lebih akurat
 - [ ] `/matches/{id}` **tidak menyediakan** `average_rank` di level atas (beda dengan `/players/{id}/matches`) → harus dihitung dari rata-rata `rank_tier` pemain, atau dibiarkan `null`
-- [ ] Di `/matches/{id}`, `players[].account_id` bisa **kosong** untuk pemain berprofil privat (pada match uji: 3 dari 10) → baris tanpa `account_id` harus dilewati saat menulis `match_players`
+- [ ] Di `/matches/{id}`, `players[].account_id` bisa **kosong** untuk pemain berprofil privat → baris tanpa `account_id` dilewati saat menulis `match_players`. **Jumlahnya banyak**: pada 20 match akun uji, hanya sebagian match yang lengkap 10 pemain — sisanya 3–7 pemain. Jadi `match_players` **tidak bisa** dipakai untuk mendeteksi party; pakai field `party_size` dari `/players/{id}/recentMatches`
 - [ ] `/players/{id}/matches` tidak memuat `gpm`/`xpm`/`hero_damage` → kolom itu hanya bisa diisi dari `/matches/{id}` atau `/recentMatches`
 - [ ] MMR per match dari Valve **tidak ada**; semua angka MMR adalah STRATZ atau estimasi
 - [ ] Field MMR STRATZ harus diverifikasi di GraphiQL sebelum diandalkan
