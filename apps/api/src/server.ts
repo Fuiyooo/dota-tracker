@@ -13,15 +13,15 @@ import { playersRoutes } from './routes/players.js';
 function toHttpError(error: FastifyError): { status: number; message: string } {
   if (error instanceof OpenDotaError) {
     if (error.status === 404) {
-      return { status: 404, message: 'Data tidak ditemukan di OpenDota' };
+      return { status: 404, message: 'Not found on OpenDota' };
     }
-    return { status: 502, message: 'Gagal mengambil data dari OpenDota' };
+    return { status: 502, message: 'Failed to fetch data from OpenDota' };
   }
 
   const status = error.statusCode ?? 500;
   return {
     status,
-    message: status >= 500 ? 'Terjadi kesalahan di server' : error.message,
+    message: status >= 500 ? 'Internal server error' : error.message,
   };
 }
 

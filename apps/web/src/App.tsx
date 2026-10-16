@@ -16,7 +16,7 @@ function formatDuration(seconds: number): string {
 }
 
 function formatDate(epochSeconds: number): string {
-  return new Date(epochSeconds * 1000).toLocaleString('id-ID', {
+  return new Date(epochSeconds * 1000).toLocaleString('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
@@ -35,12 +35,12 @@ function MatchTable({
         <thead className="bg-slate-900 text-left text-slate-400">
           <tr>
             <th className="px-4 py-2 font-medium">Hero</th>
-            <th className="px-4 py-2 font-medium">Hasil</th>
+            <th className="px-4 py-2 font-medium">Result</th>
             <th className="px-4 py-2 font-medium">K / D / A</th>
             <th className="px-4 py-2 font-medium">GPM</th>
             <th className="px-4 py-2 font-medium">XPM</th>
-            <th className="px-4 py-2 font-medium">Durasi</th>
-            <th className="px-4 py-2 font-medium">Waktu</th>
+            <th className="px-4 py-2 font-medium">Duration</th>
+            <th className="px-4 py-2 font-medium">Played</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800">
@@ -57,13 +57,13 @@ function MatchTable({
                         className="h-6 w-10 rounded object-cover"
                       />
                     )}
-                    <span>{hero?.localized_name ?? `hero ${match.hero_id}`}</span>
+                    <span>{hero?.localized_name ?? `Hero ${match.hero_id}`}</span>
                   </span>
                 </td>
                 <td
                   className={`px-4 py-2 font-medium ${match.won ? 'text-emerald-400' : 'text-rose-400'}`}
                 >
-                  {match.won ? 'Menang' : 'Kalah'}
+                  {match.won ? 'Win' : 'Loss'}
                 </td>
                 <td className="px-4 py-2">
                   {match.kills} / {match.deaths} / {match.assists}
@@ -116,7 +116,8 @@ export default function App() {
     <div className="mx-auto max-w-5xl p-6">
       <h1 className="text-2xl font-bold text-sky-400">Dota 2 Tracker</h1>
       <p className="mt-1 text-sm text-slate-400">
-        Pratinjau — data langsung dari OpenDota lewat client kita (belum dari database).
+        Preview — data fetched live from OpenDota through our own client (not from the database
+        yet).
       </p>
 
       <form
@@ -130,25 +131,25 @@ export default function App() {
         <input
           value={term}
           onChange={(event) => setTerm(event.target.value)}
-          placeholder="Cari nama pemain, mis. nyen"
+          placeholder="Search a player name, e.g. nyen"
           className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 outline-none focus:border-sky-500"
         />
         <button
           type="submit"
           className="rounded-lg bg-sky-600 px-4 py-2 font-medium hover:bg-sky-500"
         >
-          Cari
+          Search
         </button>
       </form>
 
-      {searchQuery.isFetching && <p className="mt-3 text-sm text-slate-400">Mencari…</p>}
+      {searchQuery.isFetching && <p className="mt-3 text-sm text-slate-400">Searching…</p>}
       {searchQuery.isError && (
         <p className="mt-3 text-sm text-rose-400">
-          Gagal mencari: {(searchQuery.error as Error).message}
+          Search failed: {(searchQuery.error as Error).message}
         </p>
       )}
       {searchQuery.data?.length === 0 && (
-        <p className="mt-3 text-sm text-slate-400">Tidak ada hasil untuk &quot;{query}&quot;.</p>
+        <p className="mt-3 text-sm text-slate-400">No results for &quot;{query}&quot;.</p>
       )}
 
       {searchQuery.data && searchQuery.data.length > 0 && (
@@ -166,19 +167,19 @@ export default function App() {
                   <img src={item.avatarfull} alt="" className="h-9 w-9 rounded-full" />
                 )}
                 <span className="flex-1">
-                  <span className="block font-medium">{item.personaname ?? '(tanpa nama)'}</span>
+                  <span className="block font-medium">{item.personaname ?? '(no name)'}</span>
                   <span className="block text-xs text-slate-400">
                     account_id {item.account_id}
                   </span>
                 </span>
-                <span className="text-xs text-slate-500">lihat →</span>
+                <span className="text-xs text-slate-500">view →</span>
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      {profileQuery.isLoading && <p className="mt-6 text-slate-400">Memuat profil…</p>}
+      {profileQuery.isLoading && <p className="mt-6 text-slate-400">Loading profile…</p>}
       {profileQuery.isError && (
         <p className="mt-6 text-rose-400">{(profileQuery.error as Error).message}</p>
       )}
@@ -190,7 +191,7 @@ export default function App() {
           )}
           <div>
             <h2 className="text-xl font-semibold">
-              {profileQuery.data.personaname ?? '(tanpa nama)'}
+              {profileQuery.data.personaname ?? '(no name)'}
             </h2>
             <p className="text-sm text-slate-400">
               <span className="text-amber-300">{profileQuery.data.rank_label}</span>
@@ -208,7 +209,7 @@ export default function App() {
 
       {matchesQuery.data && matchesQuery.data.length > 0 && (
         <>
-          <h3 className="mt-6 text-lg font-semibold">Match terakhir</h3>
+          <h3 className="mt-6 text-lg font-semibold">Recent matches</h3>
           <MatchTable matches={matchesQuery.data} heroById={heroById} />
         </>
       )}

@@ -27,7 +27,7 @@ export async function playersRoutes(app: FastifyInstance): Promise<void> {
   // Didaftarkan sebelum /players/:accountId supaya "search" tidak dibaca sebagai account_id.
   app.get('/players/search', async (request, reply) => {
     const parsed = playerSearchQuerySchema.safeParse(request.query);
-    if (!parsed.success) return badRequest(reply, 'Parameter q tidak valid', parsed.error.issues);
+    if (!parsed.success) return badRequest(reply, 'Invalid "q" parameter', parsed.error.issues);
 
     const results = await opendota.searchPlayers(parsed.data.q);
     return results.slice(0, 20);
@@ -35,11 +35,11 @@ export async function playersRoutes(app: FastifyInstance): Promise<void> {
 
   app.get('/players/:accountId', async (request, reply) => {
     const parsed = accountIdParamSchema.safeParse(request.params);
-    if (!parsed.success) return badRequest(reply, 'accountId tidak valid', parsed.error.issues);
+    if (!parsed.success) return badRequest(reply, 'Invalid accountId', parsed.error.issues);
 
     const player = await opendota.getPlayer(parsed.data.accountId);
     if (player.profile === null) {
-      return reply.code(404).send({ error: `Akun ${parsed.data.accountId} tidak ditemukan` });
+      return reply.code(404).send({ error: `Player ${parsed.data.accountId} not found` });
     }
 
     return {
@@ -56,10 +56,10 @@ export async function playersRoutes(app: FastifyInstance): Promise<void> {
 
   app.get('/players/:accountId/matches', async (request, reply) => {
     const params = accountIdParamSchema.safeParse(request.params);
-    if (!params.success) return badRequest(reply, 'accountId tidak valid', params.error.issues);
+    if (!params.success) return badRequest(reply, 'Invalid accountId', params.error.issues);
 
     const query = paginationQuerySchema.safeParse(request.query);
-    if (!query.success) return badRequest(reply, 'limit/offset tidak valid', query.error.issues);
+    if (!query.success) return badRequest(reply, 'Invalid limit/offset', query.error.issues);
 
     const all = await opendota.getPlayerRecentMatches(params.data.accountId);
     const { limit, offset } = query.data;
