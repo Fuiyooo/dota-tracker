@@ -1,25 +1,10 @@
 import { sql } from 'drizzle-orm';
+import { getOpenDotaClient } from '../opendota/client.js';
 import { client, db } from './client.js';
 import { heroes } from './schema.js';
 
-const OPENDOTA_BASE = 'https://api.opendota.com/api';
-
-interface OpenDotaHeroStats {
-  id: number;
-  name: string;
-  localized_name: string;
-  img: string;
-  primary_attr: string;
-  roles: string[];
-}
-
 async function main(): Promise<void> {
-  const response = await fetch(`${OPENDOTA_BASE}/heroStats`);
-  if (!response.ok) {
-    throw new Error(`OpenDota /heroStats gagal: HTTP ${response.status}`);
-  }
-
-  const stats = (await response.json()) as OpenDotaHeroStats[];
+  const stats = await getOpenDotaClient().getHeroStats();
 
   const rows = stats.map((hero) => ({
     hero_id: hero.id,

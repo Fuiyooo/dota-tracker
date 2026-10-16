@@ -77,17 +77,18 @@ Cakupan: multi-akun, search bebas
 
 ## 4. Integrasi OpenDota
 
-- [ ] HTTP client (`undici`) + wrapper retry + rate limiter (`p-queue`/`bottleneck`)
-- [ ] Batas: 60 req/menit, 2000/hari (free tier)
-- [ ] Endpoint client:
-  - [ ] `GET /players/{account_id}` -> profil, rank_tier, leaderboard_rank, computed_mmr
-  - [ ] `GET /search?q=` -> resolve akun
-  - [ ] `GET /players/{id}/matches` + `/recentMatches`
-  - [ ] `GET /players/{id}/heroes` + `/wl`
-  - [ ] `GET /matches/{match_id}`
-  - [ ] `GET /heroStats` (cache 24 jam)
-- [ ] Cache layer (TTL): profil 10 menit, matches 2 menit, heroStats 24 jam, detail match permanen
-- [ ] Logging + error handling terpusat
+- [x] HTTP client (`undici`) + wrapper retry + rate limiter (`p-queue`) → `apps/api/src/opendota/client.ts`. Retry eksponensial (3 percobaan) untuk 429/5xx/error jaringan, menghormati header `Retry-After`
+- [x] Batas: 60 req/menit, 2000/hari (free tier) → `PQueue` (intervalCap 60 / 60 detik, concurrency 2) + penghitung kuota harian yang melempar error sebelum kuota habis
+- [x] Endpoint client:
+  - [x] `GET /players/{account_id}` -> profil, rank_tier, leaderboard_rank, computed_mmr
+  - [x] `GET /search?q=` -> resolve akun
+  - [x] `GET /players/{id}/matches` + `/recentMatches`
+  - [x] `GET /players/{id}/heroes` + `/wl`
+  - [x] `GET /matches/{match_id}`
+  - [x] `GET /heroStats` (cache 24 jam)
+- [x] Cache layer (TTL): profil 10 menit, matches 2 menit, heroStats 24 jam, detail match permanen → `apps/api/src/cache.ts`, plus penggabungan permintaan bersamaan (5 request key sama = 1 HTTP) dan batas 500 entri
+- [x] Logging + error handling terpusat → `apps/api/src/logger.ts` (JSON satu baris, level dari `LOG_LEVEL`) + kelas `OpenDotaError`
+- [x] Setiap respons divalidasi zod sebelum dipakai (menangkap perubahan bentuk API lebih awal)
 
 ---
 
@@ -202,6 +203,9 @@ Cakupan: multi-akun, search bebas
 
 - [ ] **Wajib**: target player harus mengaktifkan *Expose Public Match Data*, kalau tidak data baru tidak muncul
 - [ ] Field `average_rank` OpenDota bisa `null`; `/players/{id}/ratings` bisa kosong -> STRATZ jadi andalan MMR
+- [ ] `/matches/{id}` **tidak menyediakan** `average_rank` di level atas (beda dengan `/players/{id}/matches`) → harus dihitung dari rata-rata `rank_tier` pemain, atau dibiarkan `null`
+- [ ] Di `/matches/{id}`, `players[].account_id` bisa **kosong** untuk pemain berprofil privat (pada match uji: 3 dari 10) → baris tanpa `account_id` harus dilewati saat menulis `match_players`
+- [ ] `/players/{id}/matches` tidak memuat `gpm`/`xpm`/`hero_damage` → kolom itu hanya bisa diisi dari `/matches/{id}` atau `/recentMatches`
 - [ ] MMR per match dari Valve **tidak ada**; semua angka MMR adalah STRATZ atau estimasi
 - [ ] Field MMR STRATZ harus diverifikasi di GraphiQL sebelum diandalkan
 - [ ] ToS: pemakaian pribadi, wajib cache + atribusi OpenDota/STRATZ; jangan resell data
