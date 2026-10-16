@@ -129,42 +129,47 @@ Cakupan: multi-akun, search bebas
 
 ## 8. Backend API (Fastify)
 
-- [ ] Setup server + plugin (cors, helmet, rate limit, error handler)
+> Sebagian sudah dikerjakan saat membuat pratinjau FE (lihat Bagian 9).
+
+- [ ] Setup server + plugin (cors, helmet, rate limit, error handler) → server Fastify + **penanganan error terpusat sudah ada** (`apps/api/src/server.ts`); **cors belum perlu** karena FE lewat proxy Vite; helmet + rate limit menyusul
 - [ ] Route:
-  - [ ] `GET /players/search?q=` — account_id / steamid64 / vanity
-  - [ ] `GET /players/:accountId` — profil + rank + mmr terkini
-  - [ ] `GET /players/:accountId/matches` — paginated
+  - [x] `GET /players/search?q=` — mencari **nama** lewat OpenDota `/search`. **Belum** menerima account_id/steamid64/vanity (vanity butuh `ResolveVanityURL` Steam)
+  - [x] `GET /players/:accountId` — profil + rank + mmr terkini (+ `rank_label` dari `@dota/shared`)
+  - [x] `GET /players/:accountId/matches` — paginated (`limit`/`offset`), sumber `/recentMatches`
   - [ ] `GET /players/:accountId/heroes` — winrate per hero
   - [ ] `GET /players/:accountId/summary` — winrate, streak, top heroes
   - [ ] `GET /players/:accountId/mmr-history`
   - [ ] `POST /players` — mulai tracking
   - [ ] `POST /players/:accountId/sync` — trigger sync manual
   - [ ] `GET /sync/status`
-- [ ] Validasi zod di semua route
+- [x] Validasi zod di semua route (param & query, memakai schema dari `@dota/shared`)
+- [x] Ekstra: `GET /api/health` (status DB + kuota OpenDota + ukuran cache) dan `GET /api/heroes` (dibaca dari Postgres)
 - [ ] Dokumentasi OpenAPI (Swagger) opsional
 
 ---
 
 ## 9. Frontend (React + Vite)
 
-- [ ] Setup Vite + React + TailwindCSS + TanStack Query
-- [ ] Routing (React Router)
+> Sebagian sudah dikerjakan sebagai pratinjau "jalur vertikal tipis" (lihat Bagian 8).
+
+- [x] Setup Vite + React + TailwindCSS + TanStack Query
+- [ ] Routing (React Router) — belum, masih satu halaman
 - [ ] Halaman Search
-  - [ ] Input bebas (account_id / steamid64 / URL)
-  - [ ] Hasil + tombol "Track"
+  - [ ] Input bebas (account_id / steamid64 / URL) → sekarang hanya menerima **nama**
+  - [ ] Hasil + tombol "Track" → hasil sudah bisa diklik untuk membuka profil; tombol Track menyusul (butuh `POST /players`)
 - [ ] Halaman Profil
-  - [ ] Kartu profil (avatar, nama, rank medal, leaderboard rank)
+  - [x] Kartu profil (avatar, nama, rank medal) — `leaderboard_rank` belum ditampilkan
   - [ ] Grafik MMR history (Recharts/ECharts) dengan label **resmi vs estimasi**
   - [ ] Ringkasan: winrate total, streak, top 5 hero
 - [ ] Halaman Match
-  - [ ] Tabel match (hero, K/D/A, GPM/XPM, durasi, menang/kalah, party size)
+  - [x] Tabel match (hero + gambar, K/D/A, GPM, XPM, durasi, menang/kalah) — kolom party size belum
   - [ ] Filter by hero / hasil
   - [ ] Detail match (opsional)
 - [ ] Hero Pool view
   - [ ] Winrate + jumlah game per hero
   - [ ] Sorting
 - [ ] Daftar akun yang di-track (multi-akun)
-- [ ] Indikator loading/error/cache
+- [x] Indikator loading/error → sudah ada; indikator cache belum
 
 ---
 

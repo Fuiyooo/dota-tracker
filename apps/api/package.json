@@ -13,6 +13,7 @@
   "dependencies": {
     "@dota/shared": "workspace:*",
     "drizzle-orm": "^0.45.4",
+    "fastify": "^5.12.7",
     "p-queue": "^10.0.0",
     "postgres": "^3.4.9",
     "undici": "^8.12.1",
