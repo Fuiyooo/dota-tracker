@@ -17,7 +17,8 @@ import {
  * - waktu disimpan sebagai epoch detik (`integer`), bukan `timestamptz`.
  */
 export const players = pgTable('players', {
-  account_id: integer('account_id').primaryKey(),
+  // account_id adalah uint32 (maks 4294967295), melebihi batas integer int4 (2147483647)
+  account_id: bigint('account_id', { mode: 'number' }).primaryKey(),
   steam_id64: text('steam_id64').notNull(),
   personaname: text('personaname'),
   avatar: text('avatar'),
@@ -64,7 +65,7 @@ export const matchPlayers = pgTable(
     // Sengaja TANPA foreign key ke `players`: kita menyimpan KESEPULUH pemain
     // sebuah match, dan hampir semuanya bukan akun yang di-track. Pemain tanpa
     // `account_id` (profil privat) dilewati saat sync.
-    account_id: integer('account_id').notNull(),
+    account_id: bigint('account_id', { mode: 'number' }).notNull(),
     // Sengaja TANPA foreign key ke `heroes`: kalau hero baru dirilis dan match
     // tersinkron sebelum seed hero dijalankan ulang, FK akan menggagalkan sync.
     hero_id: integer('hero_id').notNull(),
@@ -93,7 +94,7 @@ export const mmrSnapshots = pgTable(
   'mmr_snapshots',
   {
     id: serial('id').primaryKey(),
-    account_id: integer('account_id')
+    account_id: bigint('account_id', { mode: 'number' })
       .notNull()
       .references(() => players.account_id),
     recorded_at: integer('recorded_at').notNull(),
@@ -107,7 +108,7 @@ export const mmrSnapshots = pgTable(
 
 export const syncLogs = pgTable('sync_logs', {
   id: serial('id').primaryKey(),
-  account_id: integer('account_id'),
+  account_id: bigint('account_id', { mode: 'number' }),
   scope: text('scope').notNull(),
   started_at: integer('started_at').notNull(),
   finished_at: integer('finished_at'),

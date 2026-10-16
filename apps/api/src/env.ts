@@ -16,6 +16,9 @@ const envSchema = z.object({
   STRATZ_TOKEN: z.string().min(1),
   PORT: z.coerce.number().int().positive().default(3001),
   SYNC_INTERVAL_CRON: z.string().default('*/30 * * * *'),
+  /** Daftar origin dipisah koma. Kosong = CORS tidak diaktifkan (FE lewat proxy Vite). */
+  CORS_ORIGIN: z.string().optional(),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
 });
 
 export type Env = z.infer<typeof envSchema>;

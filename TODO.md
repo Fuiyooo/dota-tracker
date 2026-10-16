@@ -63,7 +63,7 @@ Cakupan: multi-akun, search bebas
 
 - [x] Init Drizzle ORM + konfigurasi driver → `drizzle-orm` + `postgres` (postgres.js) + `drizzle-kit`. Postgres native dipakai untuk dev **dan** prod (bukan SQLite dev → Postgres prod)
 - [x] Buat tabel:
-  - [x] `players` (account_id PK, steam_id64, personaname, avatar, rank_tier, leaderboard_rank, computed_mmr, tracking_enabled, last_synced_at). Catatan: `computed_mmr` **double precision** (OpenDota mengirim desimal)
+  - [x] `players` (account_id PK, steam_id64, personaname, avatar, rank_tier, leaderboard_rank, computed_mmr, tracking_enabled, last_synced_at). Catatan: `computed_mmr` **double precision** (OpenDota mengirim desimal); `account_id` **bigint** (uint32 melebihi int4 — diperbaiki di Bagian 8)
   - [x] `matches` (match_id PK, start_time, duration, radiant_win, game_mode, lobby_type, average_rank, radiant_score, dire_score). Catatan: `match_id` **bigint** (match asli 9043331899 > batas integer 32-bit)
   - [x] `match_players` (match_id, account_id, hero_id, is_radiant, player_slot, kills, deaths, assists, gpm, xpm, last_hits, hero_damage, hero_healing, mmr_before, mmr_after, mmr_delta, mmr_source) PK(match_id, account_id). Tanpa FK ke `players`/`heroes` (1 match berisi 10 pemain; hero baru bisa muncul sebelum seed ulang)
   - [x] `heroes` (hero_id PK, name, localized_name, img, primary_attr, roles → `text[]`)
@@ -168,22 +168,46 @@ server startup ............... {"msg":"scheduler dijalankan","cron":"*/30 * * * 
 
 ## 8. Backend API (Fastify)
 
-> Sebagian sudah dikerjakan saat membuat pratinjau FE (lihat Bagian 9).
+> Sebagian dikerjakan saat pratinjau FE; **dilengkapi** di Bagian 8.
 
-- [ ] Setup server + plugin (cors, helmet, rate limit, error handler) → server Fastify + **penanganan error terpusat sudah ada** (`apps/api/src/server.ts`); **cors belum perlu** karena FE lewat proxy Vite; helmet + rate limit menyusul
-- [ ] Route:
-  - [x] `GET /players/search?q=` — mencari **nama** lewat OpenDota `/search`. **Belum** menerima account_id/steamid64/vanity (vanity butuh `ResolveVanityURL` Steam)
-  - [x] `GET /players/:accountId` — profil + rank + mmr terkini (+ `rank_label` dari `@dota/shared`)
-  - [x] `GET /players/:accountId/matches` — paginated (`limit`/`offset`), sumber `/recentMatches`
-  - [ ] `GET /players/:accountId/heroes` — winrate per hero
-  - [ ] `GET /players/:accountId/summary` — winrate, streak, top heroes
-  - [ ] `GET /players/:accountId/mmr-history`
-  - [ ] `POST /players` — mulai tracking
-  - [ ] `POST /players/:accountId/sync` — trigger sync manual
-  - [ ] `GET /sync/status`
-- [x] Validasi zod di semua route (param & query, memakai schema dari `@dota/shared`)
-- [x] Ekstra: `GET /api/health` (status DB + kuota OpenDota + ukuran cache) dan `GET /api/heroes` (dibaca dari Postgres)
-- [ ] Dokumentasi OpenAPI (Swagger) opsional
+- [x] Setup server + plugin (cors, helmet, rate limit, error handler) — `@fastify/helmet` + `@fastify/rate-limit` aktif (terbukti dari header `content-security-policy`, `x-ratelimit-limit: 120`). **CORS hanya dinyalakan bila `CORS_ORIGIN` diisi** di `.env`, supaya tidak ada default longgar; saat dev FE lewat proxy Vite sehingga CORS tidak perlu
+- [x] Route:
+  - [x] `GET /players/search?q=` — menerima **account_id, SteamID64, SteamID3, URL profil, dan vanity** (via `ResolveVanityURL` Steam) selain nama. Respons membawa `resolved_from`. Bila vanity menunjuk akun tanpa profil OpenDota, otomatis jatuh ke pencarian nama
+  - [x] `GET /players/:accountId` — **database lebih dulu**, jatuh ke OpenDota bila belum tersinkron. Respons membawa `source: 'database' | 'opendota'`
+  - [x] `GET /players/:accountId/matches` — **database lebih dulu**, bentuk respons disamakan dengan jalur OpenDota
+  - [x] `GET /players/:accountId/heroes` — winrate per hero dari database
+  - [x] `GET /players/:accountId/summary` — `synced` (dari DB: winrate, streak, top 5 hero) + `lifetime` (dari OpenDota `/wl`)
+  - [x] `GET /players/:accountId/mmr-history` — dari `listMmrHistory()`, menyertakan delta dan atribusi match
+  - [x] `POST /players` — mulai tracking (resolusi + upsert profil + sync match awal; `match_limit: 0` untuk melewati)
+  - [x] `POST /players/:accountId/sync` — trigger sync manual
+  - [x] `GET /sync/status` — akun yang di-track, kuota OpenDota, 20 log terakhir
+- [x] Validasi zod di semua route (param, query, dan body)
+- [x] Ekstra: `GET /api/health` dan `GET /api/heroes` (dari Postgres)
+- [ ] Dokumentasi OpenAPI (Swagger) opsional — belum, sengaja ditunda
+
+**Bug skema yang ketemu & diperbaiki di sini:**
+
+`account_id` bertipe `integer` (int4, maks 2 147 483 647) padahal SteamID64 mengizinkan sampai **4 294 967 295** (uint32) — dan `steamId64ToAccountId` di `@dota/shared` menerima rentang itu. Akibatnya `GET /players/4294967295` gagal dengan error query, bukan 404. Keempat kolom `account_id` (`players`, `match_players`, `mmr_snapshots`, `sync_logs`) diubah ke **bigint** lewat migrasi `drizzle/0001_*.sql`, dan `accountIdParamSchema` diberi batas atas uint32.
+
+**Hasil uji:**
+
+```
+search account_id ...... resolved_from: account_id
+search steamid64 ....... resolved_from: steamid64
+search vanity URL ...... resolved_from: vanity  -> akun 22202 (Rabscuttle)
+search nama ............ resolved_from: name    (fallback bekerja)
+profil dari DB ......... source: database | rank_label "Archon 1"
+profil akun lain ....... source: opendota
+matches dari DB ........ party_size null, source: database
+heroes ................. 20 match, winrate per hero (Zeus 2 game 1 menang 0.5)
+summary ................ synced 20 match 10W/10L, streak win 2, top 5 hero
+mmr-history ............ 2 entri dengan mmr_delta/rank_delta + match_id
+POST /players .......... 201 (profil + tracking)
+POST /players (nama) ... 404 + arahan memakai /players/search
+POST /sync ............. alreadyStored 20, synced 0 (idempoten)
+akun tidak ada ......... 404 (sebelumnya 500 karena bug skema)
+accountId > uint32 ..... 400
+```
 
 ---
 
