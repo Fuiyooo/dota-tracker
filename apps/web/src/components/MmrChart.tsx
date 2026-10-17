@@ -69,7 +69,7 @@ export default function MmrChart({ entries }: { entries: MmrHistoryEntry[] }) {
   }
 
   return (
-    <div className="mt-2 h-64 w-full">
+    <div className="mt-2 h-56 w-full sm:h-64">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
           <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
@@ -78,6 +78,7 @@ export default function MmrChart({ entries }: { entries: MmrHistoryEntry[] }) {
             type="number"
             scale="time"
             domain={['dataMin', 'dataMax']}
+            interval="preserveStartEnd"
             tick={{ fill: '#64748b', fontSize: 11 }}
             tickFormatter={(value: number) =>
               new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })

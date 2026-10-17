@@ -5,6 +5,26 @@ import { HERO_IMG_CDN, getHeroes, getMatchDetail, type Hero, type MatchDetailPla
 import { ErrorBox, Loading } from '../components/Feedback';
 import { formatDate, formatDuration } from '../format';
 
+function PlayerName({ player }: { player: MatchDetailPlayer }) {
+  if (player.account_id === null) {
+    return (
+      <span className="text-slate-500" title="Profil privat">
+        Private player
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      to={`/players/${player.account_id}`}
+      className="hover:text-sky-400"
+      title={`account_id ${player.account_id}`}
+    >
+      {player.personaname ?? `account ${player.account_id}`}
+    </Link>
+  );
+}
+
 function Roster({
   title,
   won,
@@ -27,7 +47,48 @@ function Roster({
         </span>
       </h2>
 
-      <div className="mt-2 overflow-x-auto rounded-xl border border-slate-800">
+      {/* Layar kecil: kartu per pemain. */}
+      <ul className="mt-2 divide-y divide-slate-800 overflow-hidden rounded-xl border border-slate-800 md:hidden">
+        {players.map((player) => {
+          const hero = heroById.get(player.hero_id);
+          const highlighted = highlightId !== null && player.account_id === highlightId;
+          return (
+            <li
+              key={player.player_slot}
+              className={`flex items-center gap-3 px-3 py-2 ${highlighted ? 'bg-sky-950/40' : ''}`}
+            >
+              {hero ? (
+                <img
+                  src={`${HERO_IMG_CDN}${hero.img}`}
+                  alt=""
+                  className="h-8 w-14 shrink-0 rounded object-cover"
+                />
+              ) : (
+                <span className="h-8 w-14 shrink-0 rounded bg-slate-800" />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">
+                  {hero?.localized_name ?? `Hero ${player.hero_id}`}
+                </div>
+                <div className="truncate text-xs text-slate-400">
+                  <PlayerName player={player} />
+                </div>
+              </div>
+              <div className="shrink-0 text-right text-xs">
+                <div className="text-slate-300">
+                  {player.kills}/{player.deaths}/{player.assists}
+                </div>
+                <div className="text-slate-500">
+                  {player.gold_per_min} GPM · {player.net_worth ?? '–'} NW
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Layar lebar: tabel. */}
+      <div className="mt-2 hidden overflow-x-auto rounded-xl border border-slate-800 md:block">
         <table className="w-full text-sm">
           <thead className="bg-slate-900 text-left text-slate-400">
             <tr>
@@ -64,19 +125,7 @@ function Roster({
                     </span>
                   </td>
                   <td className="px-3 py-2">
-                    {player.account_id !== null ? (
-                      <Link
-                        to={`/players/${player.account_id}`}
-                        className="hover:text-sky-400"
-                        title={`account_id ${player.account_id}`}
-                      >
-                        {player.personaname ?? `account ${player.account_id}`}
-                      </Link>
-                    ) : (
-                      <span className="text-slate-500" title="Profil privat">
-                        Private player
-                      </span>
-                    )}
+                    <PlayerName player={player} />
                   </td>
                   <td className="px-3 py-2">
                     {player.kills} / {player.deaths} / {player.assists}
@@ -142,24 +191,24 @@ export default function MatchPage() {
 
       {match !== undefined && (
         <>
-          <section className="mt-4 rounded-xl border border-slate-800 p-5">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <section className="mt-4 rounded-xl border border-slate-800 p-4 sm:p-5">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <span className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
                 {match.mode}
               </span>
-              <h1 className="text-xl font-semibold">
+              <h1 className="text-2xl font-semibold">
                 <span className="text-emerald-400">{match.radiant_score ?? '–'}</span>
                 <span className="mx-2 text-slate-500">–</span>
                 <span className="text-rose-400">{match.dire_score ?? '–'}</span>
               </h1>
               <span className="text-sm text-slate-400">{formatDuration(match.duration)}</span>
-              <span className="text-sm text-slate-400">{formatDate(match.start_time)}</span>
             </div>
 
             <p className="mt-2 text-xs text-slate-500">
-              match_id {match.match_id}
+              {formatDate(match.start_time)}
               {` · winner: ${match.radiant_win ? 'Radiant' : 'Dire'}`}
               {match.average_rank !== null && ` · avg rank ${rankTierLabel(match.average_rank)}`}
+              {` · match_id ${match.match_id}`}
             </p>
           </section>
 

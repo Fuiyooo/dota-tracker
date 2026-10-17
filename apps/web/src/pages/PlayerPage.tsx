@@ -60,7 +60,7 @@ export default function PlayerPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <Link to="/" className="text-sm text-slate-400 hover:text-slate-200">
           ← Back to search
         </Link>
@@ -72,7 +72,7 @@ export default function PlayerPage() {
             type="button"
             onClick={() => sync.mutate()}
             disabled={sync.isPending}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-slate-300 hover:bg-slate-900 disabled:opacity-50"
+            className="rounded-lg border border-slate-700 px-3 py-2 text-slate-300 hover:bg-slate-900 disabled:opacity-50"
           >
             {sync.isPending ? 'Syncing…' : 'Sync now'}
           </button>
@@ -85,10 +85,14 @@ export default function PlayerPage() {
       {profileQuery.isError && <ErrorBox error={profileQuery.error} />}
 
       {profile !== undefined && (
-        <section className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-slate-800 p-5">
-          {profile.avatar && <img src={profile.avatar} alt="" className="h-16 w-16 rounded-full" />}
+        <section className="mt-4 flex flex-col gap-3 rounded-xl border border-slate-800 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+          {profile.avatar && (
+            <img src={profile.avatar} alt="" className="h-14 w-14 rounded-full sm:h-16 sm:w-16" />
+          )}
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-semibold">{profile.personaname ?? '(no name)'}</h1>
+            <h1 className="truncate text-lg font-semibold sm:text-xl">
+              {profile.personaname ?? '(no name)'}
+            </h1>
             <p className="text-sm text-slate-400">
               <span className="text-amber-300">{profile.rank_label}</span>
               {profile.leaderboard_rank !== null && ` · leaderboard #${profile.leaderboard_rank}`}
@@ -104,9 +108,9 @@ export default function PlayerPage() {
               </p>
             )}
           </div>
-          <div className="text-right text-xs text-slate-500">
-            <div>{profile.tracking_enabled ? 'Tracking' : 'Not tracked'}</div>
-            <div>source: {profile.source}</div>
+          <div className="flex gap-3 text-xs text-slate-500 sm:flex-col sm:gap-0 sm:text-right">
+            <span>{profile.tracking_enabled ? 'Tracking' : 'Not tracked'}</span>
+            <span>source: {profile.source}</span>
           </div>
         </section>
       )}
@@ -123,7 +127,7 @@ export default function PlayerPage() {
       {summaryQuery.isError && <ErrorBox error={summaryQuery.error} />}
       {summaryQuery.data !== undefined && <SummaryPanel summary={summaryQuery.data} />}
 
-      <section className="mt-6 rounded-xl border border-slate-800 p-4">
+      <section className="mt-5 rounded-xl border border-slate-800 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
           MMR &amp; rank history
         </h2>
@@ -132,8 +136,7 @@ export default function PlayerPage() {
         {historyQuery.data !== undefined && <MmrChart entries={historyQuery.data.entries} />}
         <p className="mt-2 text-xs text-slate-500">
           Official rank history (Valve). Older points are imported from STRATZ and may lag behind
-          the current rank. MMR is not published by Valve, so only rank is plotted — hover a point
-          to see the MMR bracket it implies.
+          the current rank. MMR is not published by Valve, so only rank is plotted.
         </p>
       </section>
 

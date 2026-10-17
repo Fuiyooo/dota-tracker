@@ -9,7 +9,7 @@ export default function SummaryPanel({ summary }: { summary: PlayerSummary }) {
     lifetime !== null && lifetimeTotal > 0 ? formatPercent(lifetime.win / lifetimeTotal) : null;
 
   return (
-    <section className="mt-6 grid gap-4 md:grid-cols-3">
+    <section className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <div className="rounded-xl border border-slate-800 p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Lifetime record
@@ -21,7 +21,7 @@ export default function SummaryPanel({ summary }: { summary: PlayerSummary }) {
           <p className="mt-2 text-sm text-slate-500">Not available right now.</p>
         ) : (
           <>
-            <p className="mt-2 text-2xl font-semibold">
+            <p className="mt-2 text-xl font-semibold sm:text-2xl">
               {lifetime.win}W <span className="text-slate-500">/</span> {lifetime.lose}L
             </p>
             <p className="text-sm text-slate-400">{lifetimeWinrate} winrate</p>
@@ -36,7 +36,7 @@ export default function SummaryPanel({ summary }: { summary: PlayerSummary }) {
         <p className="mt-1 text-xs text-slate-500">
           Only the {synced.synced_matches} matches stored in this app.
         </p>
-        <p className="mt-2 text-2xl font-semibold">
+        <p className="mt-2 text-xl font-semibold sm:text-2xl">
           {synced.wins}W <span className="text-slate-500">/</span> {synced.losses}L
         </p>
         <p className="text-sm text-slate-400">
@@ -56,7 +56,7 @@ export default function SummaryPanel({ summary }: { summary: PlayerSummary }) {
         </p>
       </div>
 
-      <div className="rounded-xl border border-slate-800 p-4">
+      <div className="rounded-xl border border-slate-800 p-4 sm:col-span-2 lg:col-span-1">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Top heroes</h3>
         <p className="mt-1 text-xs text-slate-500">
           Ranked by games played among those {synced.synced_matches} stored matches.
@@ -80,7 +80,7 @@ export default function SummaryPanel({ summary }: { summary: PlayerSummary }) {
         )}
       </div>
 
-      <p className="text-xs text-slate-500 md:col-span-3">
+      <p className="text-xs text-slate-500 sm:col-span-2 lg:col-span-3">
         “Lifetime” covers every match OpenDota knows about. “Synced” and “Top heroes” only count
         what this app has fetched so far.{' '}
         <Link to="heroes" className="text-sky-400 hover:underline">

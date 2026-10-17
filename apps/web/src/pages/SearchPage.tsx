@@ -33,7 +33,7 @@ export default function SearchPage() {
   return (
     <div>
       <form
-        className="flex gap-2"
+        className="flex flex-col gap-2 sm:flex-row"
         onSubmit={(event) => {
           event.preventDefault();
           setQuery(term.trim());
@@ -43,11 +43,11 @@ export default function SearchPage() {
           value={term}
           onChange={(event) => setTerm(event.target.value)}
           placeholder="Name, account_id, SteamID64, or Steam URL"
-          className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 outline-none focus:border-sky-500"
+          className="w-full flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 outline-none focus:border-sky-500"
         />
         <button
           type="submit"
-          className="rounded-lg bg-sky-600 px-4 py-2 font-medium hover:bg-sky-500"
+          className="w-full rounded-lg bg-sky-600 px-4 py-2.5 font-medium hover:bg-sky-500 sm:w-auto"
         >
           Search
         </button>
@@ -68,18 +68,20 @@ export default function SearchPage() {
               <li key={player.account_id}>
                 <Link
                   to={`/players/${player.account_id}`}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-900"
+                  className="flex items-center gap-3 px-4 py-3 active:bg-slate-900 sm:hover:bg-slate-900"
                 >
                   {player.avatar && (
-                    <img src={player.avatar} alt="" className="h-8 w-8 rounded-full" />
+                    <img src={player.avatar} alt="" className="h-9 w-9 shrink-0 rounded-full" />
                   )}
-                  <span className="flex-1">
-                    <span className="block font-medium">{player.personaname ?? '(no name)'}</span>
-                    <span className="block text-xs text-slate-400">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">
+                      {player.personaname ?? '(no name)'}
+                    </span>
+                    <span className="block truncate text-xs text-slate-400">
                       account_id {player.account_id}
                     </span>
                   </span>
-                  <span className="text-xs text-slate-500">view →</span>
+                  <span className="shrink-0 text-xs text-slate-500">view →</span>
                 </Link>
               </li>
             ))}
@@ -107,11 +109,16 @@ export default function SearchPage() {
             {searchQuery.data.map((result) => (
               <li key={result.account_id} className="flex items-center gap-3 px-4 py-3">
                 {result.avatarfull && (
-                  <img src={result.avatarfull} alt="" className="h-9 w-9 rounded-full" />
+                  <img src={result.avatarfull} alt="" className="h-9 w-9 shrink-0 rounded-full" />
                 )}
-                <Link to={`/players/${result.account_id}`} className="flex-1 hover:text-sky-400">
-                  <span className="block font-medium">{result.personaname ?? '(no name)'}</span>
-                  <span className="block text-xs text-slate-400">
+                <Link
+                  to={`/players/${result.account_id}`}
+                  className="min-w-0 flex-1 hover:text-sky-400"
+                >
+                  <span className="block truncate font-medium">
+                    {result.personaname ?? '(no name)'}
+                  </span>
+                  <span className="block truncate text-xs text-slate-400">
                     account_id {result.account_id}
                   </span>
                 </Link>
@@ -119,7 +126,7 @@ export default function SearchPage() {
                   type="button"
                   disabled={track.isPending}
                   onClick={() => track.mutate(result)}
-                  className="rounded-lg border border-sky-700 px-3 py-1.5 text-sm text-sky-300 hover:bg-sky-950 disabled:opacity-50"
+                  className="shrink-0 rounded-lg border border-sky-700 px-3 py-2 text-sm text-sky-300 hover:bg-sky-950 disabled:opacity-50"
                 >
                   {track.isPending && track.variables?.account_id === result.account_id
                     ? 'Tracking…'

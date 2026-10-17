@@ -60,6 +60,20 @@ export default function HeroPoolPage() {
     );
   }
 
+  function winrateBar(winrate: number) {
+    return (
+      <span className="flex items-center gap-2">
+        <span className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800 sm:w-24">
+          <span
+            className={`block h-full ${winrate >= 0.5 ? 'bg-emerald-500' : 'bg-rose-500'}`}
+            style={{ width: `${Math.round(winrate * 100)}%` }}
+          />
+        </span>
+        <span className="shrink-0 tabular-nums">{formatPercent(winrate)}</span>
+      </span>
+    );
+  }
+
   if (!validId) return <p className="text-rose-400">Invalid account id.</p>;
 
   const games = heroesQuery.data?.synced_matches ?? 0;
@@ -81,49 +95,96 @@ export default function HeroPoolPage() {
       )}
 
       {sorted.length > 0 && (
-        <section className="mt-3 overflow-hidden rounded-xl border border-slate-800">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-900 text-left text-slate-400">
-              <tr>
-                {header('Hero', 'name')}
-                {header('Games', 'games')}
-                {header('Wins', 'wins')}
-                {header('Winrate', 'winrate')}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {sorted.map((hero) => (
-                <tr key={hero.hero_id} className="hover:bg-slate-900/60">
-                  <td className="px-4 py-2">
-                    <span className="flex items-center gap-2">
-                      {hero.img && (
-                        <img
-                          src={`${HERO_IMG_CDN}${hero.img}`}
-                          alt=""
-                          className="h-6 w-10 rounded object-cover"
-                        />
-                      )}
-                      <span>{hero.localized_name ?? `Hero ${hero.hero_id}`}</span>
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">{hero.games}</td>
-                  <td className="px-4 py-2">{hero.wins}</td>
-                  <td className="px-4 py-2">
-                    <span className="flex items-center gap-2">
-                      <span className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-800">
-                        <span
-                          className={`block h-full ${hero.winrate >= 0.5 ? 'bg-emerald-500' : 'bg-rose-500'}`}
-                          style={{ width: `${Math.round(hero.winrate * 100)}%` }}
-                        />
-                      </span>
-                      <span className="tabular-nums">{formatPercent(hero.winrate)}</span>
-                    </span>
-                  </td>
+        <>
+          {/* Layar kecil: pilih urutan lewat dropdown, data sebagai kartu. */}
+          <div className="mt-3 flex items-center gap-2 text-sm md:hidden">
+            <label className="flex flex-1 items-center gap-2 text-slate-400">
+              <span className="shrink-0">Sort</span>
+              <select
+                value={sortKey}
+                onChange={(event) => {
+                  const key = event.target.value as SortKey;
+                  setSortKey(key);
+                  setDescending(key !== 'name');
+                }}
+                className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-slate-200"
+              >
+                <option value="games">Games</option>
+                <option value="wins">Wins</option>
+                <option value="winrate">Winrate</option>
+                <option value="name">Name</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={() => setDescending((current) => !current)}
+              className="rounded-lg border border-slate-700 px-3 py-1.5 text-slate-300"
+              aria-label={descending ? 'Descending' : 'Ascending'}
+            >
+              {descending ? '↓' : '↑'}
+            </button>
+          </div>
+
+          <ul className="mt-2 divide-y divide-slate-800 overflow-hidden rounded-xl border border-slate-800 md:hidden">
+            {sorted.map((hero) => (
+              <li key={hero.hero_id} className="flex items-center gap-3 px-3 py-2">
+                {hero.img ? (
+                  <img
+                    src={`${HERO_IMG_CDN}${hero.img}`}
+                    alt=""
+                    className="h-8 w-14 shrink-0 rounded object-cover"
+                  />
+                ) : (
+                  <span className="h-8 w-14 shrink-0 rounded bg-slate-800" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">
+                    {hero.localized_name ?? `Hero ${hero.hero_id}`}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {hero.games}g · {hero.wins}W
+                  </div>
+                </div>
+                <div className="w-28 shrink-0 text-xs">{winrateBar(hero.winrate)}</div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Layar lebar: tabel sortable. */}
+          <section className="mt-3 hidden overflow-hidden rounded-xl border border-slate-800 md:block">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-900 text-left text-slate-400">
+                <tr>
+                  {header('Hero', 'name')}
+                  {header('Games', 'games')}
+                  {header('Wins', 'wins')}
+                  {header('Winrate', 'winrate')}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {sorted.map((hero) => (
+                  <tr key={hero.hero_id} className="hover:bg-slate-900/60">
+                    <td className="px-4 py-2">
+                      <span className="flex items-center gap-2">
+                        {hero.img && (
+                          <img
+                            src={`${HERO_IMG_CDN}${hero.img}`}
+                            alt=""
+                            className="h-6 w-10 rounded object-cover"
+                          />
+                        )}
+                        <span>{hero.localized_name ?? `Hero ${hero.hero_id}`}</span>
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">{hero.games}</td>
+                    <td className="px-4 py-2">{hero.wins}</td>
+                    <td className="px-4 py-2">{winrateBar(hero.winrate)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </>
       )}
     </div>
   );

@@ -11,16 +11,24 @@ export default function StatusBar() {
   const status = statusQuery.data;
 
   return (
-    <div className="text-right text-xs text-slate-500">
+    <div className="text-left text-[11px] text-slate-500 sm:text-right sm:text-xs">
       {status === undefined ? (
         <div>{statusQuery.isError ? 'API offline' : 'Checking API…'}</div>
       ) : (
         <>
-          <div>
-            OpenDota: {status.opendota.used}/{status.opendota.limit} requests today
+          {/* Layar kecil: satu baris ringkas. */}
+          <div className="sm:hidden">
+            OpenDota {status.opendota.used}/{status.opendota.limit} · cache {status.cacheSize} ·{' '}
+            {status.tracked_players.length} tracked
           </div>
-          <div>
-            Cache: {status.cacheSize} entries · {status.tracked_players.length} tracked
+          {/* Layar lebar: dua baris. */}
+          <div className="hidden sm:block">
+            <div>
+              OpenDota: {status.opendota.used}/{status.opendota.limit} requests today
+            </div>
+            <div>
+              Cache: {status.cacheSize} entries · {status.tracked_players.length} tracked
+            </div>
           </div>
         </>
       )}
