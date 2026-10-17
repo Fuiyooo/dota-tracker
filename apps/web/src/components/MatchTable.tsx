@@ -1,7 +1,7 @@
 import { describeMatchMode } from '@dota/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HERO_IMG_CDN, getHeroes, type Hero, type PlayerMatch } from '../api';
 import { formatDate, formatDuration } from '../format';
 
@@ -17,6 +17,12 @@ export default function MatchTable({
 }) {
   const [heroFilter, setHeroFilter] = useState<'all' | number>('all');
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all');
+  const navigate = useNavigate();
+
+  function openMatch(matchId: number): void {
+    const suffix = accountId !== undefined ? `?accountId=${accountId}` : '';
+    void navigate(`/matches/${matchId}${suffix}`);
+  }
 
   const heroesQuery = useQuery({
     queryKey: ['heroes'],
@@ -104,7 +110,17 @@ export default function MatchTable({
                 const hero = heroById.get(match.hero_id);
                 const mode = describeMatchMode(match.lobby_type, match.game_mode);
                 return (
-                  <tr key={match.match_id} className="hover:bg-slate-900/60">
+                  <tr
+                    key={match.match_id}
+                    onClick={() => openMatch(match.match_id)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') openMatch(match.match_id);
+                    }}
+                    role="link"
+                    tabIndex={0}
+                    title="Buka detail match"
+                    className="cursor-pointer hover:bg-slate-900/60 focus:bg-slate-900 focus:outline-none"
+                  >
                     <td className="px-4 py-2">
                       <span className="flex items-center gap-2">
                         {hero && (

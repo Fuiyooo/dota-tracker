@@ -1,4 +1,4 @@
-import { RANK_MEDALS, estimateMmrRange, formatMmrEstimate, rankTierLabel } from '@dota/shared';
+import { RANK_MEDALS, rankTierLabel } from '@dota/shared';
 import {
   CartesianGrid,
   Line,
@@ -36,15 +36,12 @@ function RankTooltip({
   const point = payload?.[0]?.payload;
   if (point === undefined || point.rank === null) return null;
 
-  const estimate = estimateMmrRange(point.rank);
-
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs shadow-lg">
       <div className="text-slate-400">
         {new Date(point.time).toLocaleDateString('en-US', { dateStyle: 'medium' })}
       </div>
       <div className="mt-1 font-medium text-amber-300">{rankTierLabel(point.rank)}</div>
-      {estimate !== null && <div className="text-slate-400">≈ {formatMmrEstimate(estimate)}</div>}
     </div>
   );
 }

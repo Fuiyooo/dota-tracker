@@ -1,4 +1,3 @@
-import { estimateMmrRange, formatMmrEstimate } from '@dota/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { getMmrHistory, getPlayer, getPlayerMatches, getPlayerSummary, syncPlayer } from '../api';
@@ -49,7 +48,6 @@ export default function PlayerPage() {
   if (!validId) return <p className="text-rose-400">Invalid account id.</p>;
 
   const profile = profileQuery.data;
-  const mmrEstimate = profile === undefined ? null : estimateMmrRange(profile.rank_tier);
 
   return (
     <div>
@@ -85,7 +83,8 @@ export default function PlayerPage() {
             <p className="text-sm text-slate-400">
               <span className="text-amber-300">{profile.rank_label}</span>
               {profile.leaderboard_rank !== null && ` · leaderboard #${profile.leaderboard_rank}`}
-              {mmrEstimate !== null && ` · MMR est. ${formatMmrEstimate(mmrEstimate)}`}
+              {profile.computed_mmr !== null &&
+                ` · MMR ~${Math.round(profile.computed_mmr)} (OpenDota est.)`}
               {` · account_id ${profile.account_id}`}
             </p>
           </div>
@@ -98,8 +97,9 @@ export default function PlayerPage() {
 
       {profile !== undefined && (
         <p className="mt-2 text-xs text-slate-500">
-          Rank is official (Valve). MMR is an estimate derived from the medal bracket — Valve does
-          not publish MMR.
+          Rank is official (Valve). MMR is <strong>not</strong> published by Valve — the number
+          above is OpenDota&apos;s estimate computed from your match results, so it can drift away
+          from your medal, especially when most recent matches are Turbo.
         </p>
       )}
 
