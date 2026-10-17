@@ -1,13 +1,14 @@
 import '../env.js';
 import { client as dbClient } from '../db/client.js';
 import { logger } from '../logger.js';
-import { snapshotMmr, syncHeroes, syncPlayer } from './index.js';
+import { backfillRanksFromStratz, snapshotMmr, syncHeroes, syncPlayer } from './index.js';
 
 const USAGE = `Pemakaian:
   pnpm --filter @dota/api sync --heroes
   pnpm --filter @dota/api sync <accountId>
   pnpm --filter @dota/api sync <accountId> --match-limit 5
   pnpm --filter @dota/api sync --snapshot-mmr
+  pnpm --filter @dota/api sync <accountId> --backfill-ranks
   pnpm --filter @dota/api sync --heroes --snapshot-mmr <accountId>`;
 
 function messageOf(error: unknown): string {
@@ -19,6 +20,7 @@ async function main(): Promise<void> {
 
   const withHeroes = args.includes('--heroes');
   const withSnapshot = args.includes('--snapshot-mmr');
+  const withBackfill = args.includes('--backfill-ranks');
   const limitIndex = args.indexOf('--match-limit');
   const rawLimit = limitIndex === -1 ? undefined : args[limitIndex + 1];
   const matchLimit = rawLimit === undefined ? undefined : Number(rawLimit);
@@ -26,7 +28,7 @@ async function main(): Promise<void> {
   const accountArg = args.find((arg) => /^\d+$/.test(arg));
   const accountId = accountArg === undefined ? undefined : Number(accountArg);
 
-  if (!withHeroes && !withSnapshot && accountId === undefined) {
+  if (!withHeroes && !withSnapshot && !withBackfill && accountId === undefined) {
     console.log(USAGE);
     return;
   }
@@ -59,6 +61,17 @@ async function main(): Promise<void> {
     for (const failure of snapshot.failures) {
       console.log(`  akun ${failure.accountId} GAGAL: ${failure.error}`);
     }
+  }
+
+  if (withBackfill) {
+    if (accountId === undefined) {
+      console.log('--backfill-ranks membutuhkan <accountId>');
+      return;
+    }
+    const backfill = await backfillRanksFromStratz(accountId);
+    console.log(
+      `Backfill    : ${backfill.inserted} entri rank STRATZ disimpan, ${backfill.skipped} dilewati (dari ${backfill.total})`,
+    );
   }
 }
 

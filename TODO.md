@@ -213,26 +213,35 @@ accountId > uint32 ..... 400
 
 ## 9. Frontend (React + Vite)
 
-> Sebagian sudah dikerjakan sebagai pratinjau "jalur vertikal tipis" (lihat Bagian 8).
+> Sebagian dikerjakan sebagai pratinjau "jalur vertikal tipis"; **dilengkapi** di Bagian 9.
 
 - [x] Setup Vite + React + TailwindCSS + TanStack Query
-- [ ] Routing (React Router) — belum, masih satu halaman
-- [ ] Halaman Search
-  - [ ] Input bebas (account_id / steamid64 / URL) → sekarang hanya menerima **nama**
-  - [ ] Hasil + tombol "Track" → hasil sudah bisa diklik untuk membuka profil; tombol Track menyusul (butuh `POST /players`)
-- [ ] Halaman Profil
-  - [x] Kartu profil (avatar, nama, rank medal) — `leaderboard_rank` belum ditampilkan
-  - [ ] Grafik MMR history (Recharts/ECharts) dengan label **resmi vs estimasi**
-  - [ ] Ringkasan: winrate total, streak, top 5 hero
-- [ ] Halaman Match
-  - [x] Tabel match (hero + gambar, K/D/A, GPM, XPM, durasi, menang/kalah) — kolom party size belum
-  - [ ] Filter by hero / hasil
-  - [ ] Detail match (opsional)
-- [ ] Hero Pool view
-  - [ ] Winrate + jumlah game per hero
-  - [ ] Sorting
-- [ ] Daftar akun yang di-track (multi-akun)
-- [x] Indikator loading/error → sudah ada; indikator cache belum
+- [x] Routing (React Router v7): `/`, `/players/:accountId`, `/players/:accountId/heroes`
+- [x] Halaman Search
+  - [x] Input bebas: nama / account_id / SteamID64 / URL steamcommunity
+  - [x] Hasil + tombol **Track** (memanggil `POST /players`, lalu pindah ke profil)
+- [x] Halaman Profil
+  - [x] Kartu profil (avatar, nama, rank medal, `leaderboard_rank`, MMR estimasi, status tracking + `source`)
+  - [x] Grafik MMR history (Recharts): garis MMR **estimate** putus-putus + garis rank resmi; label sumbu kanan diambil dari `RANK_MEDALS` di `@dota/shared`
+  - [x] Ringkasan: lifetime (OpenDota), window tersinkron, streak, top 5 hero
+  - [x] Tombol **Sync now** (`POST /players/:accountId/sync`)
+- [x] Halaman Match
+  - [x] Tabel match (hero + gambar, K/D/A, GPM, XPM, durasi, menang/kalah)
+  - [x] Filter by hero / hasil + penghitung "Showing X of Y"
+  - [ ] Detail match (opsional) — belum
+- [x] Hero Pool view
+  - [x] Winrate + jumlah game per hero (dengan bar winrate)
+  - [x] Sorting: klik header, klik lagi membalik arah
+- [x] Daftar akun yang di-track (di halaman Search)
+- [x] Indikator loading/error/**cache** — `StatusBar` menampilkan kuota OpenDota, jumlah entri cache, dan akun tracked
+
+**Catatan:**
+
+- Kolom `party_size` tidak ditampilkan karena tidak disimpan di `match_players`; jalur database mengembalikan `null`. Bisa ditambah lewat migrasi bila diperlukan.
+- Bundle FE ~766 kB (Recharts + zod lewat `@dota/shared`) → kandidat code-splitting.
+- `getMmrHistory` memakai `limit=100` karena `paginationQuerySchema` membatasi maksimum 100.
+
+**Tambahan di luar rencana:** `backfillRanksFromStratz()` (item opsional Bagian 7) — mengimpor 49 entri histori rank STRATZ sejak 2021 ke `mmr_snapshots` dengan `source='stratz'`, supaya grafik langsung bermakna tanpa menunggu snapshot menumpuk. Idempoten. CLI: `sync <accountId> --backfill-ranks`.
 
 ---
 

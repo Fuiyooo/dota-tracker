@@ -7,6 +7,8 @@ export interface SearchResult {
   personaname: string | null;
   avatarfull: string | null;
   last_match_time: string | null;
+  rank_tier?: number | null;
+  resolved_from?: 'account_id' | 'steamid64' | 'vanity' | 'name';
 }
 
 export interface PlayerProfile {
@@ -18,6 +20,9 @@ export interface PlayerProfile {
   leaderboard_rank: number | null;
   computed_mmr: number | null;
   rank_label: string;
+  tracking_enabled: boolean;
+  last_synced_at: number | null;
+  source: 'database' | 'opendota';
 }
 
 export interface PlayerMatch {
@@ -40,6 +45,7 @@ export interface PlayerMatch {
   hero_healing: number;
   party_size: number | null;
   average_rank: number | null;
+  source?: string;
 }
 
 export interface Hero {
@@ -51,16 +57,87 @@ export interface Hero {
   roles: string[];
 }
 
-export interface Health {
-  ok: boolean;
-  database: 'up' | 'down';
-  opendota: { day: string; used: number; limit: number };
-  cacheSize: number;
-  uptimeSeconds: number;
+export interface HeroStat {
+  hero_id: number;
+  localized_name: string | null;
+  img: string | null;
+  games: number;
+  wins: number;
+  winrate: number;
 }
 
-async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${BASE}${path}`);
+export interface PlayerHeroResponse {
+  account_id: number;
+  synced_matches: number;
+  heroes: HeroStat[];
+  source: string;
+}
+
+export interface PlayerSummary {
+  account_id: number;
+  rank_tier: number | null;
+  leaderboard_rank: number | null;
+  rank_label: string;
+  computed_mmr: number | null;
+  synced: {
+    account_id: number;
+    synced_matches: number;
+    wins: number;
+    losses: number;
+    winrate: number;
+    current_streak: { type: 'win' | 'loss'; length: number } | null;
+    top_heroes: HeroStat[];
+  };
+  lifetime: { win: number; lose: number } | null;
+}
+
+export interface MmrHistoryEntry {
+  id: number;
+  recorded_at: number;
+  rank_tier: number | null;
+  leaderboard_rank: number | null;
+  computed_mmr: number | null;
+  source: string;
+  mmr_delta: number | null;
+  rank_delta: number | null;
+  match_id: number | null;
+}
+
+export interface SyncStatus {
+  opendota: { day: string; used: number; limit: number };
+  cacheSize: number;
+  tracked_players: Array<{
+    account_id: number;
+    personaname: string | null;
+    avatar: string | null;
+    rank_tier: number | null;
+    computed_mmr: number | null;
+    tracking_enabled: boolean;
+    last_synced_at: number | null;
+  }>;
+  recent_logs: Array<{
+    id: number;
+    account_id: number | null;
+    scope: string;
+    started_at: number;
+    finished_at: number | null;
+    status: string;
+    error: string | null;
+  }>;
+}
+
+export interface TrackPlayerResponse {
+  player: {
+    account_id: number;
+    personaname: string | null;
+  } | null;
+  resolved_from: string;
+  tracking_enabled: boolean;
+  matches: { checked: number; alreadyStored: number; synced: number } | null;
+}
+
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${BASE}${path}`, init);
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { error?: string } | null;
     throw new Error(body?.error ?? `HTTP ${response.status}`);
@@ -68,7 +145,19 @@ async function getJson<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-export const getHealth = () => getJson<Health>('/health');
+function getJson<T>(path: string): Promise<T> {
+  return requestJson<T>(path);
+}
+
+function postJson<T>(path: string, body: unknown): Promise<T> {
+  return requestJson<T>(path, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+// --- Endpoint ------------------------------------------------------------
 
 export const searchPlayers = (q: string) =>
   getJson<SearchResult[]>(`/players/search?q=${encodeURIComponent(q)}`);
@@ -78,4 +167,30 @@ export const getPlayer = (accountId: number) => getJson<PlayerProfile>(`/players
 export const getPlayerMatches = (accountId: number, limit = 20) =>
   getJson<PlayerMatch[]>(`/players/${accountId}/matches?limit=${limit}`);
 
+export const getPlayerHeroes = (accountId: number) =>
+  getJson<PlayerHeroResponse>(`/players/${accountId}/heroes`);
+
+export const getPlayerSummary = (accountId: number) =>
+  getJson<PlayerSummary>(`/players/${accountId}/summary`);
+
+export const getMmrHistory = (accountId: number) =>
+  getJson<{ account_id: number; entries: MmrHistoryEntry[]; source: string }>(
+    // `paginationQuerySchema` membatasi limit maksimum 100.
+    `/players/${accountId}/mmr-history?limit=100`,
+  );
+
 export const getHeroes = () => getJson<Hero[]>('/heroes');
+
+export const getSyncStatus = () => getJson<SyncStatus>('/sync/status');
+
+export const trackPlayer = (query: string, matchLimit = 20) =>
+  postJson<TrackPlayerResponse>('/players', { query, match_limit: matchLimit });
+
+export const syncPlayer = (accountId: number) =>
+  postJson<{
+    account_id: number;
+    personaname: string | null;
+    rank_tier: number | null;
+    computed_mmr: number | null;
+    matches: { checked: number; alreadyStored: number; synced: number };
+  }>(`/players/${accountId}/sync`, {});

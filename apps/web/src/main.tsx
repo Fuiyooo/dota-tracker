@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { BrowserRouter } from 'react-router-dom';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,12 +16,14 @@ const queryClient = new QueryClient({
 });
 
 const container = document.getElementById('root');
-if (container === null) throw new Error('Elemen #root tidak ditemukan');
+if (container === null) throw new Error('#root element not found');
 
 createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,
 );
