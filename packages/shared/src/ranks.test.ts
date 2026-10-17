@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   RANK_MEDALS,
+  estimateCurrentMmr,
   estimateMmrRange,
   formatMmrEstimate,
   rankTierLabel,
@@ -76,5 +77,40 @@ describe('formatMmrEstimate', () => {
   it('memformat rentang dan batas terbuka', () => {
     expect(formatMmrEstimate({ min: 2310, max: 2464, openEnded: false })).toBe('2310–2464 MMR');
     expect(formatMmrEstimate({ min: 5390, max: 5390, openEnded: true })).toBe('5390+ MMR');
+  });
+});
+
+describe('estimateCurrentMmr', () => {
+  it('netral saat menang-kalah seimbang (tengah band)', () => {
+    // Archon 1: 2310–2464, tengah = 2387.
+    const estimate = estimateCurrentMmr(41, 10, 10);
+    expect(estimate).toMatchObject({ value: 2387, formDelta: 0, basedOn: 20 });
+  });
+
+  it('turun saat lebih banyak kalah, walau rank tetap Archon 1', () => {
+    // net -5 -> -125
+    expect(estimateCurrentMmr(41, 4, 9)?.value).toBe(2262);
+    // net -2 -> -50
+    expect(estimateCurrentMmr(41, 4, 6)?.value).toBe(2337);
+  });
+
+  it('naik saat lebih banyak menang', () => {
+    // net +4 -> +100
+    expect(estimateCurrentMmr(41, 7, 3)?.value).toBe(2487);
+  });
+
+  it('membatasi geseran maksimal satu bintang', () => {
+    // net -20 seharusnya -500, dibatasi -154.
+    expect(estimateCurrentMmr(41, 0, 20)?.value).toBe(2387 - 154);
+    expect(estimateCurrentMmr(41, 20, 0)?.value).toBe(2387 + 154);
+  });
+
+  it('Immortal berjangkar di batas bawah (tidak ada batas atas)', () => {
+    expect(estimateCurrentMmr(80, 5, 5)?.value).toBe(5390);
+  });
+
+  it('null untuk rank yang tidak sah', () => {
+    expect(estimateCurrentMmr(null, 5, 5)).toBeNull();
+    expect(estimateCurrentMmr(0, 5, 5)).toBeNull();
   });
 });

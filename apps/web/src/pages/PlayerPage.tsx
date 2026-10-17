@@ -1,3 +1,4 @@
+import { estimateCurrentMmr, formatMmrEstimate } from '@dota/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { getMmrHistory, getPlayer, getPlayerMatches, getPlayerSummary, syncPlayer } from '../api';
@@ -49,6 +50,14 @@ export default function PlayerPage() {
 
   const profile = profileQuery.data;
 
+  // MMR hanya dipengaruhi match RANKED; Turbo punya pool sendiri.
+  const rankedMatches = (matchesQuery.data ?? []).filter((match) => match.game_mode !== 23);
+  const rankedWins = rankedMatches.filter((match) => match.won).length;
+  const mmrEstimate =
+    profile === undefined
+      ? null
+      : estimateCurrentMmr(profile.rank_tier, rankedWins, rankedMatches.length - rankedWins);
+
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
@@ -83,10 +92,17 @@ export default function PlayerPage() {
             <p className="text-sm text-slate-400">
               <span className="text-amber-300">{profile.rank_label}</span>
               {profile.leaderboard_rank !== null && ` · leaderboard #${profile.leaderboard_rank}`}
-              {profile.computed_mmr !== null &&
-                ` · MMR ~${Math.round(profile.computed_mmr)} (OpenDota est.)`}
               {` · account_id ${profile.account_id}`}
             </p>
+            {mmrEstimate !== null && (
+              <p className="mt-1 text-sm">
+                <span className="font-medium text-sky-300">MMR ≈ {mmrEstimate.value}</span>
+                <span className="text-slate-500">
+                  {' '}
+                  · estimated, band {formatMmrEstimate(mmrEstimate.band)}
+                </span>
+              </p>
+            )}
           </div>
           <div className="text-right text-xs text-slate-500">
             <div>{profile.tracking_enabled ? 'Tracking' : 'Not tracked'}</div>
@@ -97,9 +113,10 @@ export default function PlayerPage() {
 
       {profile !== undefined && (
         <p className="mt-2 text-xs text-slate-500">
-          Rank is official (Valve). MMR is <strong>not</strong> published by Valve — the number
-          above is OpenDota&apos;s estimate computed from your match results, so it can drift away
-          from your medal, especially when most recent matches are Turbo.
+          Valve does not publish MMR. The band comes from your medal (Valve); the estimate starts
+          mid-band and shifts ±25 per net win/loss across your last{' '}
+          {mmrEstimate === null ? 0 : mmrEstimate.basedOn} ranked matches. Turbo is excluded because
+          it uses a separate MMR pool.
         </p>
       )}
 

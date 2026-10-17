@@ -103,3 +103,54 @@ export function estimateMmrRange(rankTier: number | null | undefined): MmrEstima
 export function formatMmrEstimate(estimate: MmrEstimate): string {
   return estimate.openEnded ? `${estimate.min}+ MMR` : `${estimate.min}–${estimate.max} MMR`;
 }
+
+/** Rata-rata MMR yang didapat/hilang per match ranked. */
+export const MMR_PER_WIN = 25;
+
+export interface CurrentMmrEstimate {
+  /** Angka tunggal yang ditampilkan, mis. 2262. */
+  value: number;
+  /** Band medal yang jadi jangkar. */
+  band: MmrEstimate;
+  /** Geseran dari tengah band akibat hasil match (+ menang, - kalah). */
+  formDelta: number;
+  /** Jumlah match ranked yang dipakai menghitung geseran. */
+  basedOn: number;
+}
+
+/**
+ * Perkiraan MMR "sekarang": titik di dalam band medal yang digeser oleh hasil
+ * match ranked terakhir.
+ *
+ * Kenapa begini:
+ * - Valve tidak mempublikasikan MMR, dan MMR tidak selalu sejajar dengan medal.
+ *   Pemain Archon 1 yang sedang kalah bisa berada di 2260, masih Archon 1
+ *   karena belum melewati batas bawah band (2310).
+ * - Jangkar: titik tengah band medal (Archon 1 -> 2387).
+ * - Geseran: `(menang - kalah) * 25`, dibatasi ±154 (satu bintang) supaya tidak
+ *   melebar jauh dari band.
+ *
+ * `wins`/`losses` sebaiknya hanya dari match RANKED; Turbo punya pool MMR
+ * sendiri sehingga tidak menggambarkan MMR ranked.
+ *
+ * Ini heuristik, bukan pengukuran. Sebut sebagai perkiraan.
+ */
+export function estimateCurrentMmr(
+  rankTier: number | null | undefined,
+  wins: number,
+  losses: number,
+): CurrentMmrEstimate | null {
+  const band = estimateMmrRange(rankTier);
+  if (band === null) return null;
+
+  const neutral = band.openEnded ? band.min : band.min + (band.max - band.min) / 2;
+  const netWins = wins - losses;
+  const formDelta = Math.max(-MMR_PER_STAR, Math.min(MMR_PER_STAR, netWins * MMR_PER_WIN));
+
+  return {
+    value: Math.round(neutral + formDelta),
+    band,
+    formDelta,
+    basedOn: wins + losses,
+  };
+}
