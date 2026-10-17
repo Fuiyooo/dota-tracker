@@ -5,6 +5,7 @@ import { TTL_FOREVER, TtlCache } from '../cache.js';
 import { logger } from '../logger.js';
 import {
   openDotaHeroStatSchema,
+  openDotaItemConstantsSchema,
   openDotaMatchSchema,
   openDotaPlayerHeroSchema,
   openDotaPlayerMatchSchema,
@@ -13,6 +14,7 @@ import {
   openDotaSearchResultSchema,
   openDotaWinLossSchema,
   type OpenDotaHeroStat,
+  type OpenDotaItemConstants,
   type OpenDotaMatch,
   type OpenDotaPlayer,
   type OpenDotaPlayerHero,
@@ -27,6 +29,7 @@ export const OPENDOTA_TTL = {
   profile: 10 * 60_000,
   matches: 2 * 60_000,
   heroStats: 24 * 60 * 60_000,
+  constants: 24 * 60 * 60_000,
   matchDetail: TTL_FOREVER,
 } as const;
 
@@ -185,6 +188,16 @@ export class OpenDotaClient {
       OPENDOTA_TTL.heroStats,
       '/heroStats',
       z.array(openDotaHeroStatSchema),
+    );
+  }
+
+  /** Nama + gambar item untuk halaman detail match. Berat (~344 KB) tapi 24 jam. */
+  getItemConstants(): Promise<OpenDotaItemConstants> {
+    return this.cached(
+      'item-constants',
+      OPENDOTA_TTL.constants,
+      '/constants/items',
+      openDotaItemConstantsSchema,
     );
   }
 

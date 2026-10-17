@@ -57,6 +57,21 @@ export interface Hero {
   roles: string[];
 }
 
+export interface ItemRef {
+  id: number;
+  name: string;
+  dname: string | null;
+  img: string | null;
+  cost: number | null;
+}
+
+export interface MatchPick {
+  order: number;
+  /** 0 = Radiant, 1 = Dire */
+  team: number;
+  hero_id: number;
+}
+
 export interface MatchDetailPlayer {
   player_slot: number;
   account_id: number | null;
@@ -74,6 +89,9 @@ export interface MatchDetailPlayer {
   level: number | null;
   hero_damage: number;
   hero_healing: number;
+  items: ItemRef[];
+  backpack: ItemRef[];
+  neutral: ItemRef | null;
 }
 
 export interface MatchDetail {
@@ -87,6 +105,7 @@ export interface MatchDetail {
   radiant_score: number | null;
   dire_score: number | null;
   average_rank: number | null;
+  picks: MatchPick[];
   players: MatchDetailPlayer[];
   source: string;
 }

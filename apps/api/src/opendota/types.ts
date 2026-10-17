@@ -108,8 +108,28 @@ export const openDotaMatchPlayerSchema = z.object({
   hero_damage: z.number().int(),
   hero_healing: z.number().int(),
   rank_tier: z.number().int().nullable().default(null),
+  // Item: 0 berarti slot kosong.
+  item_0: z.number().int().nullable().default(null),
+  item_1: z.number().int().nullable().default(null),
+  item_2: z.number().int().nullable().default(null),
+  item_3: z.number().int().nullable().default(null),
+  item_4: z.number().int().nullable().default(null),
+  item_5: z.number().int().nullable().default(null),
+  backpack_0: z.number().int().nullable().default(null),
+  backpack_1: z.number().int().nullable().default(null),
+  backpack_2: z.number().int().nullable().default(null),
+  item_neutral: z.number().int().nullable().default(null),
 });
 export type OpenDotaMatchPlayer = z.infer<typeof openDotaMatchPlayerSchema>;
+
+/** Urutan draft. Hanya berisi pick di mode yang punya draft. */
+export const openDotaPickBanSchema = z.object({
+  is_pick: z.boolean(),
+  hero_id: z.number().int(),
+  team: z.number().int(), // 0 = Radiant, 1 = Dire
+  order: z.number().int(),
+});
+export type OpenDotaPickBan = z.infer<typeof openDotaPickBanSchema>;
 
 export const openDotaMatchSchema = z.object({
   match_id: z.number().int(),
@@ -121,8 +141,21 @@ export const openDotaMatchSchema = z.object({
   radiant_score: z.number().int().nullable().default(null),
   dire_score: z.number().int().nullable().default(null),
   players: z.array(openDotaMatchPlayerSchema).default([]),
+  picks_bans: z.array(openDotaPickBanSchema).default([]),
 });
 export type OpenDotaMatch = z.infer<typeof openDotaMatchSchema>;
+
+/** Satu entri dari `/constants/items` (dipetakan berdasarkan NAMA item). */
+export const openDotaItemConstantSchema = z.object({
+  id: z.number().int(),
+  dname: z.string().nullable().default(null),
+  img: z.string().nullable().default(null),
+  cost: z.number().int().nullable().default(null),
+});
+export type OpenDotaItemConstant = z.infer<typeof openDotaItemConstantSchema>;
+
+export const openDotaItemConstantsSchema = z.record(z.string(), openDotaItemConstantSchema);
+export type OpenDotaItemConstants = z.infer<typeof openDotaItemConstantsSchema>;
 
 /** GET /heroStats */
 export const openDotaHeroStatSchema = z.object({
