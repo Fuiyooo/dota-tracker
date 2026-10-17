@@ -244,6 +244,7 @@ accountId > uint32 ..... 400
 - **Detail match** — halaman `/matches/:matchId` dengan roster **Radiant dan Dire lengkap 10 pemain**, kolom K/D/A, GPM, XPM, LH/DN, net worth, level, hero damage, serta highlight baris pemain yang sedang dilihat. Endpoint `GET /api/matches/:matchId` mengambil **live** dari OpenDota karena (a) cache detail match sudah permanen sejak Bagian 4, dan (b) jalur database kehilangan 3 dari 10 pemain (profil privat) beserta net worth/level
 - **MMR: `computed_mmr` OpenDota akhirnya juga dibuang** — angkanya dihitung dari hasil match dengan metode yang tidak transparan (Archon 1 tapi 3921). Pengganti: `estimateCurrentMmr()` — berjangkar di **tengah band medal** (Archon 1 → 2387) lalu digeser `±25 per net win/loss` dari match **ranked** terakhir (Turbo dikecualikan karena pool MMR-nya sendiri), dibatasi ±154 (satu bintang). Untuk akun uji: 8 match ranked (3W/5L, net −2) → **MMR ≈ 2337**. Ini heuristik, bukan pengukuran — band dan rumusnya ditulis di UI
 - **Baris tabel match bisa diklik** — sebelumnya hanya ada tautan "Details →" di kolom paling kanan yang terpotong saat tabel di-scroll
+- **Tampilan mobile** — di layar < 768px, tabel match, roster detail match, dan hero pool berubah jadi **kartu** yang bisa di-tap; di layar lebar tetap tabel. Kolom "Details →" dihapus (seluruh baris sudah bisa diklik). Padding halaman, header, status bar, dan filter ikut menyesuaikan
 
 **Catatan lain:**
 
