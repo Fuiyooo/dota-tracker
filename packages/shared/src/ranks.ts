@@ -61,3 +61,45 @@ export function rankTierLabel(
 
   return info.star > 0 ? `${info.medal} ${info.star}` : info.medal;
 }
+
+/** Satu bintang diperkirakan setara 154 MMR, jadi satu medal = 770. */
+export const MMR_PER_STAR = 154;
+
+export interface MmrEstimate {
+  min: number;
+  max: number;
+  /** Immortal tidak punya batas atas yang dipublikasikan. */
+  openEnded: boolean;
+}
+
+/**
+ * Perkiraan rentang MMR dari `rank_tier` (medal resmi).
+ *
+ * Kenapa bukan angka pasti:
+ * - Valve **tidak** mempublikasikan MMR.
+ * - `computed_mmr` OpenDota terbukti tidak cocok dengan medal — akun uji
+ *   `rank_tier` 41 (Archon 1) tetapi `computed_mmr` 3903, padahal Archon 1
+ *   berada di kisaran 2310–2464. Karena itu angka itu tidak dipakai lagi.
+ *
+ * Satu-satunya data resmi adalah medal, jadi rentang di bawah diturunkan dari
+ * pemetaan umum komunitas (154 MMR per bintang). Sebut sebagai perkiraan.
+ */
+export function estimateMmrRange(rankTier: number | null | undefined): MmrEstimate | null {
+  const info = rankTierToMedal(rankTier);
+  if (info === null || typeof rankTier !== 'number') return null;
+
+  const medalNumber = Math.floor(rankTier / 10);
+
+  if (medalNumber === IMMORTAL) {
+    const min = 35 * MMR_PER_STAR; // 5390
+    return { min, max: min, openEnded: true };
+  }
+
+  const steps = (medalNumber - 1) * 5 + Math.max(info.star - 1, 0);
+  const min = steps * MMR_PER_STAR;
+  return { min, max: min + MMR_PER_STAR, openEnded: false };
+}
+
+export function formatMmrEstimate(estimate: MmrEstimate): string {
+  return estimate.openEnded ? `${estimate.min}+ MMR` : `${estimate.min}–${estimate.max} MMR`;
+}

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { RANK_MEDALS, rankTierLabel, rankTierToMedal } from './ranks.js';
+import {
+  RANK_MEDALS,
+  estimateMmrRange,
+  formatMmrEstimate,
+  rankTierLabel,
+  rankTierToMedal,
+} from './ranks.js';
 
 describe('RANK_MEDALS', () => {
   it('memuat 8 medal', () => {
@@ -43,5 +49,32 @@ describe('rankTierLabel', () => {
     expect(rankTierLabel(53, 999)).toBe('Legend 3'); // leaderboard diabaikan
     expect(rankTierLabel(null)).toBe('Unranked');
     expect(rankTierLabel(80, 0)).toBe('Immortal'); // leaderboard 0 tidak bermakna
+  });
+});
+
+describe('estimateMmrRange', () => {
+  it('menurunkan rentang dari medal resmi', () => {
+    // 11 = Herald 1, 41 = Archon 1, 55 = Legend 5, 75 = Divine 5
+    expect(estimateMmrRange(11)).toEqual({ min: 0, max: 154, openEnded: false });
+    expect(estimateMmrRange(41)).toEqual({ min: 2310, max: 2464, openEnded: false });
+    expect(estimateMmrRange(55)).toEqual({ min: 3696, max: 3850, openEnded: false });
+    expect(estimateMmrRange(75)).toEqual({ min: 5236, max: 5390, openEnded: false });
+  });
+
+  it('Immortal tidak punya batas atas', () => {
+    expect(estimateMmrRange(80)).toEqual({ min: 5390, max: 5390, openEnded: true });
+  });
+
+  it('null untuk rank yang tidak sah', () => {
+    expect(estimateMmrRange(null)).toBeNull();
+    expect(estimateMmrRange(0)).toBeNull();
+    expect(estimateMmrRange(50)).toBeNull();
+  });
+});
+
+describe('formatMmrEstimate', () => {
+  it('memformat rentang dan batas terbuka', () => {
+    expect(formatMmrEstimate({ min: 2310, max: 2464, openEnded: false })).toBe('2310–2464 MMR');
+    expect(formatMmrEstimate({ min: 5390, max: 5390, openEnded: true })).toBe('5390+ MMR');
   });
 });

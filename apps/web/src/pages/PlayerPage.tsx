@@ -1,3 +1,4 @@
+import { estimateMmrRange, formatMmrEstimate } from '@dota/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { getMmrHistory, getPlayer, getPlayerMatches, getPlayerSummary, syncPlayer } from '../api';
@@ -48,6 +49,7 @@ export default function PlayerPage() {
   if (!validId) return <p className="text-rose-400">Invalid account id.</p>;
 
   const profile = profileQuery.data;
+  const mmrEstimate = profile === undefined ? null : estimateMmrRange(profile.rank_tier);
 
   return (
     <div>
@@ -83,8 +85,7 @@ export default function PlayerPage() {
             <p className="text-sm text-slate-400">
               <span className="text-amber-300">{profile.rank_label}</span>
               {profile.leaderboard_rank !== null && ` · leaderboard #${profile.leaderboard_rank}`}
-              {profile.computed_mmr !== null &&
-                ` · MMR ~${Math.round(profile.computed_mmr)} (estimate)`}
+              {mmrEstimate !== null && ` · MMR est. ${formatMmrEstimate(mmrEstimate)}`}
               {` · account_id ${profile.account_id}`}
             </p>
           </div>
@@ -93,6 +94,13 @@ export default function PlayerPage() {
             <div>source: {profile.source}</div>
           </div>
         </section>
+      )}
+
+      {profile !== undefined && (
+        <p className="mt-2 text-xs text-slate-500">
+          Rank is official (Valve). MMR is an estimate derived from the medal bracket — Valve does
+          not publish MMR.
+        </p>
       )}
 
       {summaryQuery.isError && <ErrorBox error={summaryQuery.error} />}
@@ -106,8 +114,9 @@ export default function PlayerPage() {
         {historyQuery.isError && <ErrorBox error={historyQuery.error} />}
         {historyQuery.data !== undefined && <MmrChart entries={historyQuery.data.entries} />}
         <p className="mt-2 text-xs text-slate-500">
-          MMR is an OpenDota estimate (dashed line), not official ranked MMR. Rank comes from Valve;
-          older rank points are imported from STRATZ and may lag behind the current rank.
+          Official rank history (Valve). Older points are imported from STRATZ and may lag behind
+          the current rank. MMR is not published by Valve, so only rank is plotted — hover a point
+          to see the MMR bracket it implies.
         </p>
       </section>
 

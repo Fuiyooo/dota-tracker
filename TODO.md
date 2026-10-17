@@ -235,7 +235,14 @@ accountId > uint32 ..... 400
 - [x] Daftar akun yang di-track (di halaman Search)
 - [x] Indikator loading/error/**cache** — `StatusBar` menampilkan kuota OpenDota, jumlah entri cache, dan akun tracked
 
-**Catatan:**
+**Perbaikan setelah review pemakaian:**
+
+- **Mode match ditampilkan** — kolom baru "Mode" di tabel match, memakai `describeMatchMode()` (baru di `@dota/shared`). Turbo dideteksi dari `game_mode = 23`, bukan dari lobby. Sebaran nyata pada akun uji: **12 Turbo, 8 Ranked · All Draft**
+- **Angka MMR diperbaiki** — `computed_mmr` OpenDota **tidak lagi ditampilkan** karena terbukti salah (Archon 1 tetapi 3903). Penggantinya rentang dari medal resmi: `estimateMmrRange()` → **Archon 1 = 2310–2464 MMR**, jelas diberi label perkiraan
+- **Grafik rank memakai nama** — sumbu Y menampilkan nama medal (Herald…Immortal), tooltip menampilkan `rankTierLabel` + rentang MMR, bukan angka `rank_tier` mentah. Garis MMR dihapus karena tidak ada MMR resmi
+- **Top heroes diperjelas** — judul kartu diberi keterangan "Ranked by games played among those N stored matches", diberi nomor urut, dan ada catatan pembeda antara "lifetime" (semua match OpenDota) vs "synced" (hanya yang tersimpan di aplikasi)
+
+**Catatan lain:**
 
 - Kolom `party_size` tidak ditampilkan karena tidak disimpan di `match_players`; jalur database mengembalikan `null`. Bisa ditambah lewat migrasi bila diperlukan.
 - Bundle FE ~766 kB (Recharts + zod lewat `@dota/shared`) → kandidat code-splitting.
@@ -360,7 +367,7 @@ Catatan: ukuran image belum dioptimalkan — devDependencies ikut terbawa karena
 
 - [ ] **Wajib**: target player harus mengaktifkan *Expose Public Match Data*, kalau tidak data baru tidak muncul
 - [ ] Field `average_rank` OpenDota bisa `null`; `/players/{id}/ratings` bisa kosong -> STRATZ jadi andalan MMR
-- [ ] **`computed_mmr` dari OpenDota tidak cocok dengan `rank_tier`** — pada akun uji: `rank_tier` 41 (Archon 1) tetapi `computed_mmr` 3935.88, padahal Archon 1 biasanya ~2000–2500. Jangan tampilkan `computed_mmr` sebagai "MMR" sebelum diverifikasi di Bagian 7; STRATZ kemungkinan sumber yang lebih akurat
+- [x] **`computed_mmr` dari OpenDota tidak bisa dipakai sebagai MMR** — akun uji: `rank_tier` 41 (Archon 1) tetapi `computed_mmr` 3903. Penyebab yang paling mungkin: **12 dari 20 match terakhir adalah Turbo**, dan Turbo tidak memengaruhi MMR ranked tetapi tetap dihitung OpenDota. Keputusan: `computed_mmr` tidak ditampilkan di UI; penggantinya rentang dari medal resmi (`estimateMmrRange`, 154 MMR/bintang)
 - [ ] `/matches/{id}` **tidak menyediakan** `average_rank` di level atas (beda dengan `/players/{id}/matches`) → harus dihitung dari rata-rata `rank_tier` pemain, atau dibiarkan `null`
 - [ ] Di `/matches/{id}`, `players[].account_id` bisa **kosong** untuk pemain berprofil privat → baris tanpa `account_id` dilewati saat menulis `match_players`. **Jumlahnya banyak**: pada 20 match akun uji, hanya sebagian match yang lengkap 10 pemain — sisanya 3–7 pemain. Jadi `match_players` **tidak bisa** dipakai untuk mendeteksi party; pakai field `party_size` dari `/players/{id}/recentMatches`
 - [ ] `/players/{id}/matches` tidak memuat `gpm`/`xpm`/`hero_damage` → kolom itu hanya bisa diisi dari `/matches/{id}` atau `/recentMatches`

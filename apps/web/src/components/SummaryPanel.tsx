@@ -12,8 +12,11 @@ export default function SummaryPanel({ summary }: { summary: PlayerSummary }) {
     <section className="mt-6 grid gap-4 md:grid-cols-3">
       <div className="rounded-xl border border-slate-800 p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Lifetime (OpenDota)
+          Lifetime record
         </h3>
+        <p className="mt-1 text-xs text-slate-500">
+          All-time, from OpenDota&apos;s win/loss total.
+        </p>
         {lifetime === null ? (
           <p className="mt-2 text-sm text-slate-500">Not available right now.</p>
         ) : (
@@ -28,8 +31,11 @@ export default function SummaryPanel({ summary }: { summary: PlayerSummary }) {
 
       <div className="rounded-xl border border-slate-800 p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Synced window ({synced.synced_matches} matches)
+          Synced records
         </h3>
+        <p className="mt-1 text-xs text-slate-500">
+          Only the {synced.synced_matches} matches stored in this app.
+        </p>
         <p className="mt-2 text-2xl font-semibold">
           {synced.wins}W <span className="text-slate-500">/</span> {synced.losses}L
         </p>
@@ -52,24 +58,31 @@ export default function SummaryPanel({ summary }: { summary: PlayerSummary }) {
 
       <div className="rounded-xl border border-slate-800 p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Top heroes</h3>
+        <p className="mt-1 text-xs text-slate-500">
+          Ranked by games played among those {synced.synced_matches} stored matches.
+        </p>
         {synced.top_heroes.length === 0 ? (
           <p className="mt-2 text-sm text-slate-500">No hero data yet.</p>
         ) : (
-          <ul className="mt-2 space-y-1 text-sm">
-            {synced.top_heroes.map((hero) => (
+          <ol className="mt-2 space-y-1 text-sm">
+            {synced.top_heroes.map((hero, index) => (
               <li key={hero.hero_id} className="flex items-baseline justify-between gap-2">
-                <span className="truncate">{hero.localized_name ?? `Hero ${hero.hero_id}`}</span>
+                <span className="truncate">
+                  <span className="mr-1.5 text-slate-500">{index + 1}.</span>
+                  {hero.localized_name ?? `Hero ${hero.hero_id}`}
+                </span>
                 <span className="shrink-0 text-slate-400">
                   {hero.games}g · {formatPercent(hero.winrate)}
                 </span>
               </li>
             ))}
-          </ul>
+          </ol>
         )}
       </div>
 
-      <p className="md:col-span-3 text-xs text-slate-500">
-        “Synced window” only counts matches stored in our database.{' '}
+      <p className="text-xs text-slate-500 md:col-span-3">
+        “Lifetime” covers every match OpenDota knows about. “Synced” and “Top heroes” only count
+        what this app has fetched so far.{' '}
         <Link to="heroes" className="text-sky-400 hover:underline">
           See the full hero pool →
         </Link>

@@ -1,3 +1,4 @@
+import { describeMatchMode } from '@dota/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { HERO_IMG_CDN, getHeroes, type Hero, type PlayerMatch } from '../api';
@@ -75,12 +76,13 @@ export default function MatchTable({ matches }: { matches: PlayerMatch[] }) {
       {filtered.length === 0 ? (
         <p className="mt-3 text-sm text-slate-400">No matches match these filters.</p>
       ) : (
-        <section className="mt-3 overflow-hidden rounded-xl border border-slate-800">
+        <section className="mt-3 overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full text-sm">
             <thead className="bg-slate-900 text-left text-slate-400">
               <tr>
                 <th className="px-4 py-2 font-medium">Hero</th>
                 <th className="px-4 py-2 font-medium">Result</th>
+                <th className="px-4 py-2 font-medium">Mode</th>
                 <th className="px-4 py-2 font-medium">K / D / A</th>
                 <th className="px-4 py-2 font-medium">GPM</th>
                 <th className="px-4 py-2 font-medium">XPM</th>
@@ -91,6 +93,7 @@ export default function MatchTable({ matches }: { matches: PlayerMatch[] }) {
             <tbody className="divide-y divide-slate-800">
               {filtered.map((match) => {
                 const hero = heroById.get(match.hero_id);
+                const mode = describeMatchMode(match.lobby_type, match.game_mode);
                 return (
                   <tr key={match.match_id} className="hover:bg-slate-900/60">
                     <td className="px-4 py-2">
@@ -109,6 +112,11 @@ export default function MatchTable({ matches }: { matches: PlayerMatch[] }) {
                       className={`px-4 py-2 font-medium ${match.won ? 'text-emerald-400' : 'text-rose-400'}`}
                     >
                       {match.won ? 'Win' : 'Loss'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-2">
+                      <span className={mode.turbo ? 'text-violet-300' : 'text-slate-300'}>
+                        {mode.detail}
+                      </span>
                     </td>
                     <td className="px-4 py-2">
                       {match.kills} / {match.deaths} / {match.assists}
