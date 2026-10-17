@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "start": "bash start.sh",
+    "start": "node apps/api/dist/index.js",
+    "dev:all": "bash start.sh",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "pnpm --filter @dota/api sync --heroes"

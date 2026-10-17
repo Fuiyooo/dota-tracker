@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Jalankan seluruh stack development dengan satu perintah:  ./start.sh
-# (bisa juga lewat: pnpm start)
+# (bisa juga lewat: pnpm dev:all)
+#
+# Untuk produksi, `pnpm start` menjalankan API hasil build:
+#   pnpm build && pnpm start
 #
 # Yang dilakukan, berurutan:
 #   1. cek Node & pnpm

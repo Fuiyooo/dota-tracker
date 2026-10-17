@@ -19,7 +19,7 @@ Sumber data:
 ### Cara tercepat
 
 ```sh
-./start.sh          # atau: pnpm start
+./start.sh          # atau: pnpm dev:all
 ```
 
 Skrip itu melakukan semuanya: cek Node & pnpm, menyiapkan `.env` bila belum ada,
