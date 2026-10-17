@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+drizzle/
+.serena/
+pnpm-lock.yaml
+*.md

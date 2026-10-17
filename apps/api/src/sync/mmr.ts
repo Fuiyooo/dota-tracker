@@ -76,7 +76,9 @@ export async function snapshotAccount(
     previousRankTier,
     rankTier: data.rank_tier,
     rankDelta:
-      previousRankTier !== null && data.rank_tier !== null ? data.rank_tier - previousRankTier : null,
+      previousRankTier !== null && data.rank_tier !== null
+        ? data.rank_tier - previousRankTier
+        : null,
   };
 }
 

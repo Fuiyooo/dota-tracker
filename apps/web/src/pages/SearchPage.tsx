@@ -23,7 +23,7 @@ export default function SearchPage() {
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: ['sync-status'] });
       const accountId = data.player?.account_id;
-      if (accountId !== undefined) navigate(`/players/${accountId}`);
+      if (accountId !== undefined) void navigate(`/players/${accountId}`);
     },
   });
 
@@ -54,8 +54,8 @@ export default function SearchPage() {
       </form>
 
       <p className="mt-2 text-xs text-slate-500">
-        Accepts a player name, account_id (e.g. 1061259054), SteamID64, or a
-        steamcommunity.com profile URL.
+        Accepts a player name, account_id (e.g. 1061259054), SteamID64, or a steamcommunity.com
+        profile URL.
       </p>
 
       {tracked.length > 0 && (

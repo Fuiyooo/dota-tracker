@@ -58,9 +58,7 @@ export default function SummaryPanel({ summary }: { summary: PlayerSummary }) {
           <ul className="mt-2 space-y-1 text-sm">
             {synced.top_heroes.map((hero) => (
               <li key={hero.hero_id} className="flex items-baseline justify-between gap-2">
-                <span className="truncate">
-                  {hero.localized_name ?? `Hero ${hero.hero_id}`}
-                </span>
+                <span className="truncate">{hero.localized_name ?? `Hero ${hero.hero_id}`}</span>
                 <span className="shrink-0 text-slate-400">
                   {hero.games}g · {formatPercent(hero.winrate)}
                 </span>

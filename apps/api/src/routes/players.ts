@@ -1,12 +1,11 @@
 import {
   accountIdParamSchema,
-  accountIdToSteamId64,
   paginationQuerySchema,
   parseSteamIdInput,
   playerSearchQuerySchema,
   rankTierLabel,
 } from '@dota/shared';
-import type { FastifyInstance, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { getOpenDotaClient } from '../opendota/client.js';
 import { logger } from '../logger.js';
 import { findPlayerRow, listStoredMatches } from '../queries/players.js';
@@ -19,8 +18,10 @@ async function resolveDirect(
 ): Promise<{ accountId: number; resolvedFrom: string } | null> {
   const parsed = parseSteamIdInput(query);
 
-  if (parsed.kind === 'accountId') return { accountId: parsed.accountId, resolvedFrom: 'account_id' };
-  if (parsed.kind === 'steamId64') return { accountId: parsed.accountId, resolvedFrom: 'steamid64' };
+  if (parsed.kind === 'accountId')
+    return { accountId: parsed.accountId, resolvedFrom: 'account_id' };
+  if (parsed.kind === 'steamId64')
+    return { accountId: parsed.accountId, resolvedFrom: 'steamid64' };
 
   if (parsed.kind === 'vanity') {
     const accountId = await getSteamClient().resolveVanityUrl(parsed.vanity);

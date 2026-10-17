@@ -117,7 +117,12 @@ export class OpenDotaClient {
   // --- Endpoint ---------------------------------------------------------
 
   getPlayer(accountId: number): Promise<OpenDotaPlayer> {
-    return this.cached(`player:${accountId}`, OPENDOTA_TTL.profile, `/players/${accountId}`, openDotaPlayerSchema);
+    return this.cached(
+      `player:${accountId}`,
+      OPENDOTA_TTL.profile,
+      `/players/${accountId}`,
+      openDotaPlayerSchema,
+    );
   }
 
   searchPlayers(query: string): Promise<OpenDotaSearchResult[]> {
@@ -157,15 +162,30 @@ export class OpenDotaClient {
   }
 
   getPlayerWinLoss(accountId: number): Promise<OpenDotaWinLoss> {
-    return this.cached(`player-wl:${accountId}`, OPENDOTA_TTL.profile, `/players/${accountId}/wl`, openDotaWinLossSchema);
+    return this.cached(
+      `player-wl:${accountId}`,
+      OPENDOTA_TTL.profile,
+      `/players/${accountId}/wl`,
+      openDotaWinLossSchema,
+    );
   }
 
   getMatch(matchId: number): Promise<OpenDotaMatch> {
-    return this.cached(`match:${matchId}`, OPENDOTA_TTL.matchDetail, `/matches/${matchId}`, openDotaMatchSchema);
+    return this.cached(
+      `match:${matchId}`,
+      OPENDOTA_TTL.matchDetail,
+      `/matches/${matchId}`,
+      openDotaMatchSchema,
+    );
   }
 
   getHeroStats(): Promise<OpenDotaHeroStat[]> {
-    return this.cached('hero-stats', OPENDOTA_TTL.heroStats, '/heroStats', z.array(openDotaHeroStatSchema));
+    return this.cached(
+      'hero-stats',
+      OPENDOTA_TTL.heroStats,
+      '/heroStats',
+      z.array(openDotaHeroStatSchema),
+    );
   }
 
   // --- Internal ---------------------------------------------------------
@@ -221,7 +241,9 @@ export class OpenDotaClient {
             .slice(0, 3)
             .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
             .join('; ');
-          throw new OpenDotaError(`Bentuk respons OpenDota tidak sesuai untuk ${path} -> ${detail}`);
+          throw new OpenDotaError(
+            `Bentuk respons OpenDota tidak sesuai untuk ${path} -> ${detail}`,
+          );
         }
 
         logger.debug('opendota: respons diterima', { path, attempt });

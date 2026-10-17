@@ -29,12 +29,9 @@ export async function playerStatsRoutes(app: FastifyInstance): Promise<void> {
 
     // Total seumur hidup hanya OpenDota yang punya. Kegagalannya TIDAK boleh
     // menggagalkan ringkasan yang sudah bisa dihitung dari database.
-    let lifetime: { win: number; lose: number } | null = null;
-    try {
-      lifetime = await getOpenDotaClient().getPlayerWinLoss(accountId);
-    } catch {
-      lifetime = null;
-    }
+    const lifetime = await getOpenDotaClient()
+      .getPlayerWinLoss(accountId)
+      .catch(() => null);
 
     const rankTier = stored?.rank_tier ?? null;
     const leaderboardRank = stored?.leaderboard_rank ?? null;

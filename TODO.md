@@ -32,7 +32,7 @@ Cakupan: multi-akun, search bebas
   - `drizzle/` — migrasi DB
   - `docker-compose.yml` → **ditunda ke Bagian 12** (DB pakai Postgres native)
 - [x] Setup `tsconfig.base.json`. Catatan: tanpa `paths`/`baseUrl` — resolusi `@dota/shared` lewat symlink workspace + `exports`/`types`; TypeScript 7 sudah menghapus `baseUrl`
-- [ ] Setup ESLint + Prettier → Prettier ✓ (`.prettierrc.json`), **ESLint ditunda** sampai ada kode nyata
+- [x] Setup ESLint + Prettier → `eslint.config.mjs` (flat config: ESLint 10 + typescript-eslint + react-hooks + aturan bertipe `no-floating-promises`/`no-misused-promises`) dan `.prettierrc.json` + `.prettierignore`. **Catatan: TypeScript diturunkan ke 6.0.3 dan dikunci persis** karena typescript-eslint mensyaratkan `<6.1.0` (sebelumnya 7.0.2)
 - [x] Setup `.gitignore` (node_modules, .env, *.db, dist)
 - [x] Init git repo + commit awal
 - [x] Setup `.env.example`:
@@ -276,12 +276,49 @@ Catatan: `sync --scheduler-once` ditambahkan supaya putaran bisa dipicu manual t
 
 ## 11. Testing & Kualitas
 
-- [x] Unit test: helper SteamID, parsing rank tier → 19 tes vitest di `packages/shared`
-- [ ] Unit test: TTL cache
-- [ ] Unit test: client OpenDota/STRATZ (mock HTTP)
-- [ ] Integration test: endpoint API (SQLite in-memory)
-- [ ] Test idempotensi sync
-- [ ] CI (GitHub Actions): lint + typecheck + test
+**Selesai.** Total **63 tes** (26 di `shared`, 37 di `api`) + CI.
+
+- [x] Unit test: helper SteamID, parsing rank tier → 26 tes vitest di `packages/shared`
+- [x] Unit test: TTL cache → `apps/api/src/cache.test.ts` (8 tes: TTL, expiry via clock suntikan, eviction, dedup in-flight, error tidak di-cache, delete/clear)
+- [x] Unit test: client OpenDota/STRATZ (mock HTTP) →
+  - `opendota/client.test.ts` (8 tes, mock `undici`): termasuk **regresi `computed_mmr` desimal** dan **`account_id` null**, 404 tanpa retry, 500 dengan retry, `api_key`, kuota habis
+  - `stratz/client.test.ts` (5 tes, mock `node:http2`): sukses, GraphQL error, **`TIMEOUT` retryable**, non-200, cache
+- [x] Integration test: endpoint API → `routes/api.test.ts` (13 tes) memakai `app.inject()` + **PostgreSQL**, bukan SQLite. Client OpenDota di-mock supaya tes tidak menyentuh jaringan
+- [x] Test idempotensi sync → `sync/idempotency.test.ts` (3 tes): `syncMatchDetail` 2× tidak menambah baris, `tracking_enabled` tidak tertimpa, backoff direset saat sukses
+- [x] CI (GitHub Actions): `.github/workflows/ci.yml` — `format:check` → `lint` → `typecheck` → `test`, dengan service Postgres 17
+
+**Penyimpangan dari rencana awal TODO:**
+
+- Integration test memakai **PostgreSQL** (bukan SQLite in-memory) karena skema kita memakai tipe khas Postgres (`text[]`, `bigint`, `double precision`, `filter (where ...)`).
+- "lint" dijalankan sebagai **ESLint 10 + typescript-eslint**, bukan hanya Prettier.
+
+**Database uji** (dibuat sekali, role `dota` tidak punya CREATEDB):
+
+```sh
+sudo -u postgres createdb -O dota dota_tracker_test
+```
+
+`apps/api/test/setup-db.ts` memigrasi database itu otomatis; kalau belum ada, tes berhenti dengan pesan berisi perintah di atas.
+
+**ESLint menemukan 6 masalah nyata saat pertama dijalankan** — semuanya diperbaiki, bukan dimatikan aturannya:
+
+```
+no-floating-promises .... syncTask?.destroy() ternyata Promise  -> di-await
+no-floating-promises .... navigate() React Router 7 juga Promise -> diberi void
+no-useless-assignment ... pola `let x = null; try { x = ... } catch { x = null }`
+no-unused-vars .......... sisa import accountIdToSteamId64 & FastifyReply
+preserve-caught-error ... error asli harus dilampirkan sebagai `cause`
+```
+
+**Hasil simulasi CI lokal:**
+
+```
+pnpm install --frozen-lockfile ... OK
+pnpm format:check ................ All matched files use Prettier code style!
+pnpm lint ........................ bersih
+pnpm typecheck ................... api + web + shared hijau
+pnpm test ........................ 26 (shared) + 37 (api) lulus
+```
 
 ---
 

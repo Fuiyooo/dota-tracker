@@ -31,7 +31,13 @@ async function main(): Promise<void> {
   const accountArg = args.find((arg) => /^\d+$/.test(arg));
   const accountId = accountArg === undefined ? undefined : Number(accountArg);
 
-  if (!withHeroes && !withSnapshot && !withBackfill && !withSchedulerOnce && accountId === undefined) {
+  if (
+    !withHeroes &&
+    !withSnapshot &&
+    !withBackfill &&
+    !withSchedulerOnce &&
+    accountId === undefined
+  ) {
     console.log(USAGE);
     return;
   }

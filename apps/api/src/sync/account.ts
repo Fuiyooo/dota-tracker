@@ -55,7 +55,10 @@ async function markAccountFailure(accountId: number): Promise<void> {
 export async function syncAccount(
   accountId: number,
   options: { matchLimit?: number } = {},
-): Promise<{ matches: { checked: number; alreadyStored: number; synced: number } | null; snapshot: MmrChange | null }> {
+): Promise<{
+  matches: { checked: number; alreadyStored: number; synced: number } | null;
+  snapshot: MmrChange | null;
+}> {
   try {
     await syncPlayerProfile(accountId);
     const matches = await syncPlayerMatches(accountId, { limit: options.matchLimit });

@@ -4,12 +4,7 @@ import { syncLogs } from '../db/schema.js';
 import { logger } from '../logger.js';
 
 export type SyncScope =
-  | 'heroes'
-  | 'profile'
-  | 'matches'
-  | 'match_detail'
-  | 'mmr_snapshot'
-  | 'rank_backfill';
+  'heroes' | 'profile' | 'matches' | 'match_detail' | 'mmr_snapshot' | 'rank_backfill';
 export type SyncStatus = 'running' | 'success' | 'error';
 
 /** Semua kolom waktu di proyek ini memakai epoch detik, bukan timestamptz. */

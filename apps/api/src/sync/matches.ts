@@ -57,7 +57,9 @@ export async function syncMatchDetail(matchId: number): Promise<{
     });
 
   const playerRows = data.players
-    .filter((player): player is typeof player & { account_id: number } => player.account_id !== null)
+    .filter(
+      (player): player is typeof player & { account_id: number } => player.account_id !== null,
+    )
     .map((player) => ({
       match_id: data.match_id,
       account_id: player.account_id,

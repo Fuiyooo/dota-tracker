@@ -1,12 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import {
-  getMmrHistory,
-  getPlayer,
-  getPlayerMatches,
-  getPlayerSummary,
-  syncPlayer,
-} from '../api';
+import { getMmrHistory, getPlayer, getPlayerMatches, getPlayerSummary, syncPlayer } from '../api';
 import { ErrorBox, Loading } from '../components/Feedback';
 import MatchTable from '../components/MatchTable';
 import MmrChart from '../components/MmrChart';
@@ -83,9 +77,7 @@ export default function PlayerPage() {
 
       {profile !== undefined && (
         <section className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-slate-800 p-5">
-          {profile.avatar && (
-            <img src={profile.avatar} alt="" className="h-16 w-16 rounded-full" />
-          )}
+          {profile.avatar && <img src={profile.avatar} alt="" className="h-16 w-16 rounded-full" />}
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-semibold">{profile.personaname ?? '(no name)'}</h1>
             <p className="text-sm text-slate-400">

@@ -98,10 +98,9 @@ export class SteamClient {
    * bisa dipakai untuk membedakan.
    */
   async resolveVanityUrl(vanity: string): Promise<number | null> {
-    const data = await this.getJson<ResolveVanityResponse>(
-      '/ISteamUser/ResolveVanityURL/v0001/',
-      { vanityurl: vanity },
-    );
+    const data = await this.getJson<ResolveVanityResponse>('/ISteamUser/ResolveVanityURL/v0001/', {
+      vanityurl: vanity,
+    });
 
     const steamId64 = data.response?.steamid;
     if (data.response?.success !== 1 || steamId64 === undefined) {
@@ -130,20 +129,21 @@ export class SteamClient {
     const player = data.response?.players?.[0];
     if (player === undefined || player.steamid === undefined) return null;
 
-    let accountId: number | null = null;
-    try {
-      accountId = steamId64ToAccountId(player.steamid);
-    } catch {
-      accountId = null;
-    }
-
     return {
       steamId64: player.steamid,
-      accountId,
+      accountId: safeAccountId(player.steamid),
       personaname: player.personaname ?? null,
       avatarfull: player.avatarfull ?? null,
       profileurl: player.profileurl ?? null,
     };
+  }
+}
+
+function safeAccountId(steamId64: string): number | null {
+  try {
+    return steamId64ToAccountId(steamId64);
+  } catch {
+    return null;
   }
 }
 

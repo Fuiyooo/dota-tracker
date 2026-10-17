@@ -293,7 +293,8 @@ export class StratzClient {
           const retryable = error instanceof StratzError ? error.retryable : true;
           if (!retryable || attempt === this.config.maxAttempts) break;
 
-          const delayMs = Math.min(1_000 * 2 ** (attempt - 1), 10_000) + Math.floor(Math.random() * 500);
+          const delayMs =
+            Math.min(1_000 * 2 ** (attempt - 1), 10_000) + Math.floor(Math.random() * 500);
           logger.warn('stratz: percobaan gagal, mencoba ulang', {
             attempt,
             delayMs,

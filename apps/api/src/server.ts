@@ -19,7 +19,11 @@ import { SteamError } from './steam/client.js';
  * detail internal tidak boleh bocor ke luar.
  */
 function toHttpError(error: FastifyError): { status: number; message: string } {
-  if (error instanceof OpenDotaError || error instanceof StratzError || error instanceof SteamError) {
+  if (
+    error instanceof OpenDotaError ||
+    error instanceof StratzError ||
+    error instanceof SteamError
+  ) {
     if (error instanceof OpenDotaError && error.status === 404) {
       return { status: 404, message: 'Not found on OpenDota' };
     }

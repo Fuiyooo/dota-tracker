@@ -124,7 +124,7 @@ export function startScheduler(): void {
 }
 
 export async function stopScheduler(): Promise<void> {
-  syncTask?.destroy();
+  await syncTask?.destroy();
   syncTask = undefined;
   await queue.onIdle();
   await shutdown();

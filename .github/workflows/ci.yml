@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Format · Lint · Typecheck · Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dota
+          POSTGRES_PASSWORD: dota
+          POSTGRES_DB: dota_tracker_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dota -d dota_tracker_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://dota:dota@localhost:5432/dota_tracker_test
+      TEST_DATABASE_URL: postgres://dota:dota@localhost:5432/dota_tracker_test
+      # Nilai dummy: tes tidak pernah memanggil Steam/STRATZ sungguhan.
+      STEAM_API_KEY: 00000000000000000000000000000000
+      STRATZ_TOKEN: dummy.token.for.ci
+      LOG_LEVEL: error
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.11.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test

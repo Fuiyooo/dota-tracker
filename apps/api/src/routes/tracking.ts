@@ -1,4 +1,8 @@
-import { accountIdParamSchema, trackPlayerBodySchema, trackingToggleBodySchema } from '@dota/shared';
+import {
+  accountIdParamSchema,
+  trackPlayerBodySchema,
+  trackingToggleBodySchema,
+} from '@dota/shared';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { db } from '../db/client.js';
@@ -99,9 +103,9 @@ export async function trackingRoutes(app: FastifyInstance): Promise<void> {
 
     const row = updated[0];
     if (row === undefined) {
-      return reply
-        .code(404)
-        .send({ error: `Player ${params.data.accountId} is not tracked yet. Use POST /api/players first.` });
+      return reply.code(404).send({
+        error: `Player ${params.data.accountId} is not tracked yet. Use POST /api/players first.`,
+      });
     }
 
     return row;
