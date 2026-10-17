@@ -10,7 +10,7 @@ Sumber data:
 
 ## Prasyarat
 
-- Node.js >= 20
+- Node.js >= 22.19 (dibutuhkan oleh `undici` 8.x — `zlib.createZstdDecompress` baru ada di Node 22.15+)
 - pnpm 12 (`npm i -g pnpm`)
 - PostgreSQL 16+ — native, atau lewat Docker
 

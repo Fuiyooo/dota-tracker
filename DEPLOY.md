@@ -61,6 +61,11 @@ Migrasi dan seed hero dijalankan otomatis oleh container API saat start
 > Render: **New Web Service → Docker**, Dockerfile Path `apps/api/Dockerfile`,
 > env sama. Fly.io: `fly launch` dengan Dockerfile tersebut.
 
+> **Versi Node.** Platform membaca `engines.node` di `package.json` root. Nilainya
+> **`>=22.19.0`** dan jangan diturunkan: `undici` 8.x memanggil
+> `zlib.createZstdDecompress`, yang baru ada di Node 22.15+. Di Node 20 container
+> akan crash saat memuat modul, sebelum kode aplikasi berjalan.
+
 ## 3. Deploy web ke Vercel
 
 1. **Add New → Project**, import repo yang sama.
