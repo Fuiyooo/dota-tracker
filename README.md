@@ -16,6 +16,25 @@ Sumber data:
 
 ## Development
 
+### Cara tercepat
+
+```sh
+./start.sh          # atau: pnpm start
+```
+
+Skrip itu melakukan semuanya: cek Node & pnpm, menyiapkan `.env` bila belum ada,
+memastikan PostgreSQL hidup, menerapkan migrasi, mengisi daftar hero bila masih
+kosong, membebaskan port 3001/5173 dari proses lama proyek ini, lalu menjalankan
+API + web dan membuka browser. Hentikan dengan `Ctrl+C`.
+
+Kalau tidak ingin browser terbuka otomatis:
+
+```sh
+NO_OPEN=1 ./start.sh
+```
+
+### Langkah manual (kalau ingin tahu detailnya)
+
 ```sh
 pnpm install
 cp .env.example .env          # isi STEAM_API_KEY & STRATZ_TOKEN
