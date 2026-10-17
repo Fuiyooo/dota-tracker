@@ -13,7 +13,7 @@ export default defineConfig({
     hookTimeout: 30_000,
     env: {
       DATABASE_URL: TEST_DATABASE_URL,
-      LOG_LEVEL: 'error',
+      LOG_LEVEL: 'silent',
     },
   },
 });

@@ -1,0 +1,98 @@
+# Dota 2 Tracker
+
+Pelacak statistik Dota 2 pribadi: cari pemain, pantau rank/MMR, lihat daftar match dan hero pool.
+
+Sumber data:
+
+- **OpenDota** — profil, rank, match, daftar hero, estimasi MMR.
+- **STRATZ** — histori rank (GraphQL, wajib HTTP/2).
+- **Steam Web API** — resolusi vanity URL.
+
+## Prasyarat
+
+- Node.js >= 20
+- pnpm 12 (`npm i -g pnpm`)
+- PostgreSQL 16+ — native, atau lewat Docker
+
+## Development
+
+```sh
+pnpm install
+cp .env.example .env          # isi STEAM_API_KEY & STRATZ_TOKEN
+pnpm db:migrate               # buat/ubah tabel
+pnpm db:seed                  # isi daftar hero (127 baris)
+pnpm dev                      # API :3001 + web :5173
+```
+
+Buka <http://localhost:5173>.
+
+> Pakai `localhost`, bukan `127.0.0.1` — Vite bind ke IPv6 (`[::1]`).
+
+### Script yang sering dipakai
+
+| Perintah | Fungsi |
+| --- | --- |
+| `pnpm dev` | API + web + watcher `shared` sekaligus |
+| `pnpm typecheck` | `tsc` untuk API, web, dan shared |
+| `pnpm lint` | ESLint |
+| `pnpm test` | 63 tes (shared + API), butuh database uji |
+| `pnpm format` / `pnpm format:check` | Prettier |
+| `pnpm db:generate` | Buat file migrasi dari perubahan skema |
+| `pnpm db:migrate` | Terapkan migrasi |
+| `pnpm db:seed` | Upsert daftar hero |
+| `pnpm --filter @dota/api sync <accountId>` | Sync profil + match + snapshot satu akun |
+| `pnpm --filter @dota/api sync --scheduler-once` | Jalankan satu putaran scheduler manual |
+| `pnpm --filter @dota/api sync <id> --backfill-ranks` | Impor histori rank STRATZ |
+
+Tes integrasi memakai database terpisah. Buat sekali:
+
+```sh
+sudo -u postgres createdb -O dota dota_tracker_test
+```
+
+## Struktur
+
+```
+apps/api      Fastify + Drizzle ORM + client OpenDota/STRATZ/Steam
+apps/web      React + Vite + Tailwind + TanStack Query
+packages/shared  tipe, schema zod, helper SteamID & rank
+drizzle/      migrasi SQL
+```
+
+## Produksi (Docker)
+
+```sh
+docker compose up -d --build
+```
+
+- Web: <http://localhost:8080>
+- API: <http://localhost:3001/api/health>
+- Postgres: `localhost:5433` (5433 karena 5432 sering sudah dipakai Postgres native)
+- Migrasi dijalankan otomatis saat container API start (`RUN_MIGRATIONS=true`)
+- nginx meneruskan `/api` ke container `api`, jadi tidak perlu konfigurasi CORS
+
+Kredensial dibaca dari `.env` di root (tidak ikut ter-commit).
+
+Isi daftar hero sekali setelah stack hidup (database container terpisah dari database dev):
+
+```sh
+docker compose exec api node apps/api/dist/sync/run.js --heroes
+```
+
+Data pemain diambil saat kamu menekan **Track** di aplikasi, atau manual:
+
+```sh
+docker compose exec api node apps/api/dist/sync/run.js <accountId>
+```
+
+## Catatan data
+
+- **MMR tidak resmi.** Valve tidak menyediakan MMR per match, dan STRATZ juga tidak
+  (`MatchPlayerType` tidak punya field MMR). Angka MMR di aplikasi ini adalah
+  estimasi `computed_mmr` OpenDota — di grafik digambar putus-putus.
+  Rank (`rank_tier`) berasal dari Valve dan andal.
+- **Target player harus mengaktifkan "Expose Public Match Data"**, kalau tidak
+  match baru tidak akan muncul di OpenDota.
+- Pemain dengan profil privat tidak punya `account_id` di detail match, sehingga
+  barisnya dilewati saat menulis `match_players`.
+- Pemakaian pribadi. Hormati batas OpenDota (60 permintaan/menit, 2000/hari).

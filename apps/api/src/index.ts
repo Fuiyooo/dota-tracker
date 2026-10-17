@@ -1,13 +1,25 @@
 import { client as dbClient } from './db/client.js';
 import { env } from './env.js';
 import { logger } from './logger.js';
+import { runMigrations } from './migrate.js';
 import { startScheduler, stopScheduler } from './scheduler.js';
 import { buildServer } from './server.js';
+
+if (env.RUN_MIGRATIONS === 'true') {
+  try {
+    await runMigrations();
+  } catch (error) {
+    logger.error('migrasi gagal, server tidak dijalankan', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    process.exit(1);
+  }
+}
 
 const app = buildServer();
 
 try {
-  await app.listen({ port: env.PORT, host: '127.0.0.1' });
+  await app.listen({ port: env.PORT, host: env.HOST });
 } catch (error) {
   logger.error('gagal menjalankan server', {
     error: error instanceof Error ? error.message : String(error),

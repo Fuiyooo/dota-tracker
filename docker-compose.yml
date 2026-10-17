@@ -1,0 +1,57 @@
+name: dota-tracker
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dota
+      POSTGRES_PASSWORD: dota
+      POSTGRES_DB: dota_tracker
+    # 5433 di host karena 5432 sudah dipakai PostgreSQL native mesin ini.
+    # Container lain tetap memakai 5432 lewat jaringan internal.
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dota -d dota_tracker']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://dota:dota@postgres:5432/dota_tracker
+      STEAM_API_KEY: ${STEAM_API_KEY:?isi STEAM_API_KEY di .env}
+      STRATZ_TOKEN: ${STRATZ_TOKEN:?isi STRATZ_TOKEN di .env}
+      OPENDOTA_API_KEY: ${OPENDOTA_API_KEY:-}
+      PORT: '3001'
+      # Wajib 0.0.0.0: nginx di container lain harus bisa menjangkau API.
+      HOST: '0.0.0.0'
+      SYNC_INTERVAL_CRON: ${SYNC_INTERVAL_CRON:-*/30 * * * *}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RUN_MIGRATIONS: 'true'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '3001:3001'
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '8080:80'
+
+volumes:
+  pgdata:

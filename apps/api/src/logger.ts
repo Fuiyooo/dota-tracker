@@ -1,28 +1,36 @@
+import pino from 'pino';
+
 type Level = 'debug' | 'info' | 'warn' | 'error';
 
-const LEVELS: Record<Level, number> = { debug: 10, info: 20, warn: 30, error: 40 };
+const LEVELS: readonly string[] = ['debug', 'info', 'warn', 'error'];
 
 export type LogFields = Record<string, unknown>;
 
-function threshold(): number {
+function resolveLevel(): string {
   const raw = (process.env.LOG_LEVEL ?? 'info').toLowerCase();
-  return LEVELS[raw as Level] ?? LEVELS.info;
-}
-
-function emit(level: Level, msg: string, fields?: LogFields): void {
-  if (LEVELS[level] < threshold()) return;
-
-  // `fields` diletakkan lebih dulu supaya tidak bisa menimpa time/level/msg.
-  const line = { ...fields, time: new Date().toISOString(), level, msg };
-  const text = `${JSON.stringify(line)}\n`;
-  if (level === 'warn' || level === 'error') process.stderr.write(text);
-  else process.stdout.write(text);
+  if (raw === 'silent') return 'silent';
+  return LEVELS.includes(raw) ? raw : 'info';
 }
 
 /**
- * Logger JSON satu-baris. Sementara ini cukup; Bagian 12 akan menggantinya
- * dengan pino kalau memang diperlukan transport tambahan.
+ * Logger terstruktur berbasis pino.
+ *
+ * Antarmuka sengaja dipertahankan `logger.info(msg, fields)` (urutan lama)
+ * supaya seluruh pemanggil tidak perlu diubah; pino sendiri memakai urutan
+ * sebaliknya, jadi dibalik di sini.
  */
+const instance = pino({
+  level: resolveLevel(),
+  // pid/hostname dihilangkan supaya baris log tetap ringkas untuk pemakaian pribadi.
+  base: undefined,
+  formatters: { level: (label) => ({ level: label }) },
+  timestamp: pino.stdTimeFunctions.isoTime,
+});
+
+function emit(level: Level, msg: string, fields?: LogFields): void {
+  instance[level](fields ?? {}, msg);
+}
+
 export const logger = {
   debug: (msg: string, fields?: LogFields) => emit('debug', msg, fields),
   info: (msg: string, fields?: LogFields) => emit('info', msg, fields),

@@ -220,6 +220,9 @@ importers:
       p-queue:
         specifier: ^10.0.0
         version: 10.0.0
+      pino:
+        specifier: ^10.4.0
+        version: 10.4.0
       postgres:
         specifier: ^3.4.9
         version: 3.4.9

@@ -324,12 +324,35 @@ pnpm test ........................ 26 (shared) + 37 (api) lulus
 
 ## 12. Deployment & Ops
 
-- [ ] `docker-compose.yml`: Postgres + Redis + api + web
-- [ ] Build produksi `apps/web` (static) + `apps/api`
-- [ ] Env produksi + secrets
-- [ ] Migrasi otomatis saat start
-- [ ] Health check endpoint
-- [ ] Logging terstruktur (pino)
+**Selesai.**
+
+- [x] `docker-compose.yml`: **Postgres + api + web**. **Redis tidak disertakan** karena BullMQ (Bagian 7) bersifat opsional dan tidak dipakai — tidak ada gunanya menjalankan service kosong
+  - Postgres dipetakan ke host **5433** karena 5432 sudah dipakai Postgres native mesin ini; container lain tetap memakai 5432 lewat jaringan internal
+  - `web` (nginx) meneruskan `/api` ke container `api`, jadi tidak perlu CORS
+- [x] Build produksi → `apps/api/Dockerfile` (multi-stage, menjalankan `node apps/api/dist/index.js`) dan `apps/web/Dockerfile` (Vite build → `nginx:alpine`)
+- [x] Env produksi + secrets → compose membaca `.env` di root; `STEAM_API_KEY` & `STRATZ_TOKEN` wajib (`:?` membuat compose gagal bila kosong). `.env` tetap di-gitignore
+- [x] Migrasi otomatis saat start → `apps/api/src/migrate.ts` + `RUN_MIGRATIONS=true`. Terbukti: 6 tabel terbentuk tanpa langkah manual
+- [x] Health check endpoint → `GET /api/health` + `HEALTHCHECK` di Dockerfile; compose memakai `condition: service_healthy`
+- [x] Logging terstruktur (pino) → `logger.ts` memakai pino 10. Antarmuka `logger.info(msg, fields)` sengaja dipertahankan supaya ~30 pemanggil tidak perlu diubah
+
+**Bug yang ketemu saat menguji stack:**
+
+`/api` lewat nginx → **502 Bad Gateway**. Penyebabnya API bind ke `127.0.0.1`, sehingga nginx di container lain tidak bisa menjangkaunya. Ditambahkan env `HOST` (default `127.0.0.1` untuk lokal, compose memakai `0.0.0.0`). Ini jenis bug yang hanya muncul saat stack benar-benar dijalankan, bukan di typecheck.
+
+**Hasil uji stack:**
+
+```
+docker compose build ....... api + web sukses
+docker compose up -d ....... postgres healthy, api healthy, web healthy
+web :8080 .................. 200
+SPA /players/:id ........... 200 (fallback ke index.html)
+migrasi otomatis ........... 6 tabel terbentuk di Postgres container
+proxy /api/health .......... {"ok":true,"database":"up"}
+proxy /api/players/:id ..... 200 (jatuh ke OpenDota karena DB container kosong)
+seed lewat container ....... 127 hero -> /api/heroes mengembalikan 127
+```
+
+Catatan: ukuran image belum dioptimalkan — devDependencies ikut terbawa karena seluruh workspace disalin agar symlink `node_modules` tetap valid.
 
 ---
 

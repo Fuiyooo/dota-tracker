@@ -15,10 +15,14 @@ const envSchema = z.object({
   OPENDOTA_API_KEY: z.string().optional(),
   STRATZ_TOKEN: z.string().min(1),
   PORT: z.coerce.number().int().positive().default(3001),
+  /** Alamat bind. `127.0.0.1` aman untuk lokal; container perlu `0.0.0.0`. */
+  HOST: z.string().default('127.0.0.1'),
   SYNC_INTERVAL_CRON: z.string().default('*/30 * * * *'),
   /** Daftar origin dipisah koma. Kosong = CORS tidak diaktifkan (FE lewat proxy Vite). */
   CORS_ORIGIN: z.string().optional(),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
+  /** Terapkan migrasi saat start (dipakai container produksi). */
+  RUN_MIGRATIONS: z.enum(['true', 'false']).default('false'),
 });
 
 export type Env = z.infer<typeof envSchema>;
