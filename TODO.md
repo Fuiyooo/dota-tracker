@@ -247,10 +247,30 @@ accountId > uint32 ..... 400
 
 ## 10. Multi-Akun & Scheduler
 
-- [ ] Tabel `players.tracking_enabled` + endpoint toggle
-- [ ] Loop scheduler untuk semua akun yang di-track
-- [ ] Backoff untuk akun yang gagal (private match data)
-- [ ] Batas konkurensi agar tidak kena rate limit
+**Selesai.**
+
+- [x] Tabel `players.tracking_enabled` + endpoint toggle → `PATCH /players/:accountId/tracking` dengan body `{ "enabled": boolean }`. Mengaktifkan ulang juga mereset backoff; 404 bila akun belum pernah di-track
+- [x] Loop scheduler untuk semua akun yang di-track → `runScheduledSync()` di `scheduler.ts`. Satu putaran = profil + match inkremental + snapshot MMR **per akun**
+- [x] Backoff untuk akun yang gagal → kolom baru `players.sync_failures` & `players.next_sync_at` (migrasi `drizzle/0002_*.sql`). Urutan tunggu: 30 menit → 1 jam → 2 jam → 4 jam → maksimum 6 jam; keberhasilan mereset
+- [x] Batas konkurensi → `PQueue({ concurrency: 2 })` untuk akun, di atas rate limit 60 permintaan/menit milik client OpenDota
+
+**Hasil uji** (menyisipkan akun palsu `4294967290` yang pasti gagal):
+
+```
+putaran #1 .... 2/2 jatuh tempo | 1 sukses, 1 gagal
+                akun asli : sync_failures=0, next_sync_at=null
+                akun palsu: sync_failures=1, next_sync_at=+30 menit
+putaran #2 .... 1/2 jatuh tempo | 1 sukses, 0 gagal, 1 ditunda (backoff)
+gagal lagi .... sync_failures=2, tunggu 3599 detik (~60 menit)   <- backoff naik
+putaran #3 .... 1/1 jatuh tempo | 1 sukses  (setelah akun palsu dihapus)
+PATCH false ... 200 {"tracking_enabled":false,"sync_failures":0,"next_sync_at":null}
+PATCH true .... 200 (backoff direset)
+PATCH 404 ..... "Player 1 is not tracked yet. Use POST /api/players first."
+PATCH 400 ..... body bukan boolean -> detail zod
+/sync/status .. kini menampilkan sync_failures & next_sync_at per akun
+```
+
+Catatan: `sync --scheduler-once` ditambahkan supaya putaran bisa dipicu manual tanpa menunggu cron.
 
 ---
 

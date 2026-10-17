@@ -2,6 +2,7 @@ import '../env.js';
 import { client as dbClient } from '../db/client.js';
 import { logger } from '../logger.js';
 import { backfillRanksFromStratz, snapshotMmr, syncHeroes, syncPlayer } from './index.js';
+import { runScheduledSync } from '../scheduler.js';
 
 const USAGE = `Pemakaian:
   pnpm --filter @dota/api sync --heroes
@@ -9,6 +10,7 @@ const USAGE = `Pemakaian:
   pnpm --filter @dota/api sync <accountId> --match-limit 5
   pnpm --filter @dota/api sync --snapshot-mmr
   pnpm --filter @dota/api sync <accountId> --backfill-ranks
+  pnpm --filter @dota/api sync --scheduler-once
   pnpm --filter @dota/api sync --heroes --snapshot-mmr <accountId>`;
 
 function messageOf(error: unknown): string {
@@ -21,6 +23,7 @@ async function main(): Promise<void> {
   const withHeroes = args.includes('--heroes');
   const withSnapshot = args.includes('--snapshot-mmr');
   const withBackfill = args.includes('--backfill-ranks');
+  const withSchedulerOnce = args.includes('--scheduler-once');
   const limitIndex = args.indexOf('--match-limit');
   const rawLimit = limitIndex === -1 ? undefined : args[limitIndex + 1];
   const matchLimit = rawLimit === undefined ? undefined : Number(rawLimit);
@@ -28,7 +31,7 @@ async function main(): Promise<void> {
   const accountArg = args.find((arg) => /^\d+$/.test(arg));
   const accountId = accountArg === undefined ? undefined : Number(accountArg);
 
-  if (!withHeroes && !withSnapshot && !withBackfill && accountId === undefined) {
+  if (!withHeroes && !withSnapshot && !withBackfill && !withSchedulerOnce && accountId === undefined) {
     console.log(USAGE);
     return;
   }
@@ -71,6 +74,13 @@ async function main(): Promise<void> {
     const backfill = await backfillRanksFromStratz(accountId);
     console.log(
       `Backfill    : ${backfill.inserted} entri rank STRATZ disimpan, ${backfill.skipped} dilewati (dari ${backfill.total})`,
+    );
+  }
+
+  if (withSchedulerOnce) {
+    const result = await runScheduledSync();
+    console.log(
+      `Scheduler   : ${result.due}/${result.tracked} akun jatuh tempo | ${result.succeeded} sukses, ${result.failed} gagal, ${result.skipped} ditunda (backoff)`,
     );
   }
 }

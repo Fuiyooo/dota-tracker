@@ -27,3 +27,9 @@ export const trackPlayerBodySchema = z.object({
   match_limit: z.coerce.number().int().min(0).max(100).optional(),
 });
 export type TrackPlayerBody = z.infer<typeof trackPlayerBodySchema>;
+
+/** PATCH /players/:accountId/tracking */
+export const trackingToggleBodySchema = z.object({
+  enabled: z.boolean(),
+});
+export type TrackingToggleBody = z.infer<typeof trackingToggleBodySchema>;

@@ -19,6 +19,8 @@ export async function listTrackedPlayers() {
       rank_tier: players.rank_tier,
       computed_mmr: players.computed_mmr,
       tracking_enabled: players.tracking_enabled,
+      sync_failures: players.sync_failures,
+      next_sync_at: players.next_sync_at,
       last_synced_at: players.last_synced_at,
     })
     .from(players)

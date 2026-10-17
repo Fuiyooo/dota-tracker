@@ -27,6 +27,10 @@ export const players = pgTable('players', {
   // desimal, mis. 3960.07 - jangan pakai integer
   computed_mmr: doublePrecision('computed_mmr'),
   tracking_enabled: boolean('tracking_enabled').notNull().default(true),
+  /** Jumlah kegagalan sync berturut-turut; dipakai scheduler untuk backoff. */
+  sync_failures: integer('sync_failures').notNull().default(0),
+  /** Scheduler melewati akun ini sampai epoch detik ini lewat (null = tidak menunggu). */
+  next_sync_at: integer('next_sync_at'),
   last_synced_at: integer('last_synced_at'),
 });
 

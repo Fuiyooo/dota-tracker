@@ -1,4 +1,4 @@
-import { accountIdParamSchema, trackPlayerBodySchema } from '@dota/shared';
+import { accountIdParamSchema, trackPlayerBodySchema, trackingToggleBodySchema } from '@dota/shared';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { db } from '../db/client.js';
@@ -72,6 +72,39 @@ export async function trackingRoutes(app: FastifyInstance): Promise<void> {
       computed_mmr: result.profile.computed_mmr,
       matches: result.matches,
     };
+  });
+
+  /** Nyalakan/matikan tracking. Mengaktifkan ulang juga mereset backoff. */
+  app.patch('/players/:accountId/tracking', async (request, reply) => {
+    const params = accountIdParamSchema.safeParse(request.params);
+    if (!params.success) return badRequest(reply, 'Invalid accountId', params.error.issues);
+
+    const body = trackingToggleBodySchema.safeParse(request.body);
+    if (!body.success) return badRequest(reply, 'Invalid body', body.error.issues);
+
+    const updated = await db
+      .update(players)
+      .set({
+        tracking_enabled: body.data.enabled,
+        sync_failures: 0,
+        next_sync_at: null,
+      })
+      .where(eq(players.account_id, params.data.accountId))
+      .returning({
+        account_id: players.account_id,
+        tracking_enabled: players.tracking_enabled,
+        sync_failures: players.sync_failures,
+        next_sync_at: players.next_sync_at,
+      });
+
+    const row = updated[0];
+    if (row === undefined) {
+      return reply
+        .code(404)
+        .send({ error: `Player ${params.data.accountId} is not tracked yet. Use POST /api/players first.` });
+    }
+
+    return row;
   });
 
   app.get('/sync/status', async () => {

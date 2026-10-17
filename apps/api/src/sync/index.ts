@@ -1,8 +1,9 @@
 export { syncHeroes } from './heroes.js';
 export { syncPlayerProfile } from './players.js';
 export { syncMatchDetail, syncPlayerMatches } from './matches.js';
-export { snapshotMmr, type SnapshotResult, type MmrChange } from './mmr.js';
+export { snapshotMmr, snapshotAccount, type SnapshotResult, type MmrChange } from './mmr.js';
 export { backfillRanksFromStratz } from './ranks.js';
+export { syncAccount, backoffSeconds } from './account.js';
 export { withSyncLog, epochNow, type SyncScope, type SyncStatus } from './logs.js';
 
 import { syncPlayerMatches } from './matches.js';

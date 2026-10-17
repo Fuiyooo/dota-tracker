@@ -30,18 +30,61 @@ function round2(value: number): number {
 }
 
 /**
- * Ambil `computed_mmr` + rank setiap akun yang `tracking_enabled`, lalu simpan
- * sebagai satu baris `mmr_snapshots` per akun.
+ * Ambil satu snapshot MMR/rank untuk SATU akun.
  *
- * Catatan penting soal `source='estimate'`:
- * - MMR per match tidak tersedia (Valve maupun STRATZ - lihat Bagian 5), jadi
- *   `computed_mmr` di sini adalah **perkiraan** OpenDota, bukan MMR ranked resmi.
- *   Nilainya juga tidak selalu cocok dengan `rank_tier` (akun uji: Archon 1
- *   tetapi 3935.88). Jangan ditampilkan sebagai "MMR" tanpa catatan.
- * - `rank_tier` dan `leaderboard_rank` sendiri andal karena berasal dari Valve.
+ * Melempar error bila gagal, supaya pemanggil bisa memilih perilaku:
+ * batch (`snapshotMmr`) mengumpulkannya, scheduler memakainya untuk backoff.
  *
- * Satu akun yang gagal **tidak** membatalkan batch; kegagalannya dikumpulkan
- * di `failures` (backoff per akun menyusul di Bagian 10).
+ * `source='estimate'` karena `computed_mmr` OpenDota adalah perkiraan, bukan
+ * MMR ranked resmi. `rank_tier`/`leaderboard_rank` andal karena dari Valve.
+ */
+export async function snapshotAccount(
+  accountId: number,
+  recordedAt: number = epochNow(),
+): Promise<MmrChange> {
+  const data = await getOpenDotaClient().getPlayer(accountId);
+  if (data.profile === null) throw new Error('profil tidak ditemukan di OpenDota');
+
+  const previousRows = await db
+    .select({ computed_mmr: mmrSnapshots.computed_mmr, rank_tier: mmrSnapshots.rank_tier })
+    .from(mmrSnapshots)
+    .where(eq(mmrSnapshots.account_id, accountId))
+    .orderBy(desc(mmrSnapshots.recorded_at))
+    .limit(1);
+  const previous = previousRows[0];
+
+  await db.insert(mmrSnapshots).values({
+    account_id: accountId,
+    recorded_at: recordedAt,
+    rank_tier: data.rank_tier,
+    leaderboard_rank: data.leaderboard_rank,
+    computed_mmr: data.computed_mmr,
+    source: 'estimate',
+  });
+
+  const previousMmr = previous?.computed_mmr ?? null;
+  const previousRankTier = previous?.rank_tier ?? null;
+
+  return {
+    accountId,
+    previousMmr,
+    mmr: data.computed_mmr,
+    mmrDelta:
+      previousMmr !== null && data.computed_mmr !== null
+        ? round2(data.computed_mmr - previousMmr)
+        : null,
+    previousRankTier,
+    rankTier: data.rank_tier,
+    rankDelta:
+      previousRankTier !== null && data.rank_tier !== null ? data.rank_tier - previousRankTier : null,
+  };
+}
+
+/**
+ * Snapshot semua akun yang `tracking_enabled`.
+ *
+ * Satu akun gagal **tidak** membatalkan batch; kegagalannya dikumpulkan di
+ * `failures`.
  */
 export async function snapshotMmr(): Promise<SnapshotResult> {
   return withSyncLog('mmr_snapshot', null, async () => {
@@ -50,7 +93,6 @@ export async function snapshotMmr(): Promise<SnapshotResult> {
       .from(players)
       .where(eq(players.tracking_enabled, true));
 
-    const recordedAt = epochNow();
     const result: SnapshotResult = {
       accounts: tracked.length,
       snapshots: 0,
@@ -60,48 +102,8 @@ export async function snapshotMmr(): Promise<SnapshotResult> {
 
     for (const { account_id: accountId } of tracked) {
       try {
-        const data = await getOpenDotaClient().getPlayer(accountId);
-        if (data.profile === null) throw new Error('profil tidak ditemukan di OpenDota');
-
-        const previousRows = await db
-          .select({
-            computed_mmr: mmrSnapshots.computed_mmr,
-            rank_tier: mmrSnapshots.rank_tier,
-          })
-          .from(mmrSnapshots)
-          .where(eq(mmrSnapshots.account_id, accountId))
-          .orderBy(desc(mmrSnapshots.recorded_at))
-          .limit(1);
-        const previous = previousRows[0];
-
-        await db.insert(mmrSnapshots).values({
-          account_id: accountId,
-          recorded_at: recordedAt,
-          rank_tier: data.rank_tier,
-          leaderboard_rank: data.leaderboard_rank,
-          computed_mmr: data.computed_mmr,
-          source: 'estimate',
-        });
+        result.changes.push(await snapshotAccount(accountId));
         result.snapshots += 1;
-
-        const previousMmr = previous?.computed_mmr ?? null;
-        const previousRankTier = previous?.rank_tier ?? null;
-
-        result.changes.push({
-          accountId,
-          previousMmr,
-          mmr: data.computed_mmr,
-          mmrDelta:
-            previousMmr !== null && data.computed_mmr !== null
-              ? round2(data.computed_mmr - previousMmr)
-              : null,
-          previousRankTier,
-          rankTier: data.rank_tier,
-          rankDelta:
-            previousRankTier !== null && data.rank_tier !== null
-              ? data.rank_tier - previousRankTier
-              : null,
-        });
       } catch (error) {
         result.failures.push({ accountId, error: messageOf(error) });
       }
