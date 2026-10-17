@@ -1,6 +1,7 @@
 import { Link, Route, Routes } from 'react-router-dom';
 import StatusBar from './components/StatusBar';
 import HeroPoolPage from './pages/HeroPoolPage';
+import MatchPage from './pages/MatchPage';
 import PlayerPage from './pages/PlayerPage';
 import SearchPage from './pages/SearchPage';
 
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/" element={<SearchPage />} />
           <Route path="/players/:accountId" element={<PlayerPage />} />
           <Route path="/players/:accountId/heroes" element={<HeroPoolPage />} />
+          <Route path="/matches/:matchId" element={<MatchPage />} />
           <Route
             path="*"
             element={

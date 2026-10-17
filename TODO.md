@@ -228,7 +228,7 @@ accountId > uint32 ..... 400
 - [x] Halaman Match
   - [x] Tabel match (hero + gambar, K/D/A, GPM, XPM, durasi, menang/kalah)
   - [x] Filter by hero / hasil + penghitung "Showing X of Y"
-  - [ ] Detail match (opsional) — belum
+  - [x] Detail match → halaman `/matches/:matchId` (lihat catatan di bawah)
 - [x] Hero Pool view
   - [x] Winrate + jumlah game per hero (dengan bar winrate)
   - [x] Sorting: klik header, klik lagi membalik arah
@@ -241,6 +241,7 @@ accountId > uint32 ..... 400
 - **Angka MMR diperbaiki** — `computed_mmr` OpenDota **tidak lagi ditampilkan** karena terbukti salah (Archon 1 tetapi 3903). Penggantinya rentang dari medal resmi: `estimateMmrRange()` → **Archon 1 = 2310–2464 MMR**, jelas diberi label perkiraan
 - **Grafik rank memakai nama** — sumbu Y menampilkan nama medal (Herald…Immortal), tooltip menampilkan `rankTierLabel` + rentang MMR, bukan angka `rank_tier` mentah. Garis MMR dihapus karena tidak ada MMR resmi
 - **Top heroes diperjelas** — judul kartu diberi keterangan "Ranked by games played among those N stored matches", diberi nomor urut, dan ada catatan pembeda antara "lifetime" (semua match OpenDota) vs "synced" (hanya yang tersimpan di aplikasi)
+- **Detail match** — halaman `/matches/:matchId` dengan roster **Radiant dan Dire lengkap 10 pemain**, kolom K/D/A, GPM, XPM, LH/DN, net worth, level, hero damage, serta highlight baris pemain yang sedang dilihat. Endpoint `GET /api/matches/:matchId` mengambil **live** dari OpenDota karena (a) cache detail match sudah permanen sejak Bagian 4, dan (b) jalur database kehilangan 3 dari 10 pemain (profil privat) beserta net worth/level
 
 **Catatan lain:**
 

@@ -90,6 +90,8 @@ export type OpenDotaWinLoss = z.infer<typeof openDotaWinLossSchema>;
 export const openDotaMatchPlayerSchema = z.object({
   // Bisa kosong untuk pemain dengan profil privat / tanpa public match data.
   account_id: z.number().int().nullable().default(null),
+  // Ikut kosong untuk pemain privat; statistiknya tetap ada.
+  personaname: z.string().nullable().default(null),
   player_slot: z.number().int(),
   hero_id: z.number().int(),
   isRadiant: z.boolean(),
@@ -99,6 +101,10 @@ export const openDotaMatchPlayerSchema = z.object({
   gold_per_min: z.number().int(),
   xp_per_min: z.number().int(),
   last_hits: z.number().int(),
+  // Field berikut hanya dipakai tampilan detail; match yang belum di-parse bisa kosong.
+  denies: z.number().int().nullable().default(null),
+  net_worth: z.number().int().nullable().default(null),
+  level: z.number().int().nullable().default(null),
   hero_damage: z.number().int(),
   hero_healing: z.number().int(),
   rank_tier: z.number().int().nullable().default(null),

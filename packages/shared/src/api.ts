@@ -7,6 +7,12 @@ export const accountIdParamSchema = z.object({
 });
 export type AccountIdParam = z.infer<typeof accountIdParamSchema>;
 
+/** GET /matches/:matchId */
+export const matchIdParamSchema = z.object({
+  matchId: z.coerce.number().int().positive(),
+});
+export type MatchIdParam = z.infer<typeof matchIdParamSchema>;
+
 export const paginationQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),

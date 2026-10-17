@@ -1,12 +1,20 @@
 import { describeMatchMode } from '@dota/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { HERO_IMG_CDN, getHeroes, type Hero, type PlayerMatch } from '../api';
 import { formatDate, formatDuration } from '../format';
 
 type ResultFilter = 'all' | 'win' | 'loss';
 
-export default function MatchTable({ matches }: { matches: PlayerMatch[] }) {
+export default function MatchTable({
+  matches,
+  accountId,
+}: {
+  matches: PlayerMatch[];
+  /** Dipakai untuk highlight baris di halaman detail. */
+  accountId?: number;
+}) {
   const [heroFilter, setHeroFilter] = useState<'all' | number>('all');
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all');
 
@@ -88,6 +96,7 @@ export default function MatchTable({ matches }: { matches: PlayerMatch[] }) {
                 <th className="px-4 py-2 font-medium">XPM</th>
                 <th className="px-4 py-2 font-medium">Duration</th>
                 <th className="px-4 py-2 font-medium">Played</th>
+                <th className="px-4 py-2 font-medium" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
@@ -125,6 +134,14 @@ export default function MatchTable({ matches }: { matches: PlayerMatch[] }) {
                     <td className="px-4 py-2">{match.xp_per_min}</td>
                     <td className="px-4 py-2">{formatDuration(match.duration)}</td>
                     <td className="px-4 py-2 text-slate-400">{formatDate(match.start_time)}</td>
+                    <td className="px-4 py-2 text-right">
+                      <Link
+                        to={`/matches/${match.match_id}${accountId !== undefined ? `?accountId=${accountId}` : ''}`}
+                        className="whitespace-nowrap text-sky-400 hover:underline"
+                      >
+                        Details →
+                      </Link>
+                    </td>
                   </tr>
                 );
               })}

@@ -57,6 +57,40 @@ export interface Hero {
   roles: string[];
 }
 
+export interface MatchDetailPlayer {
+  player_slot: number;
+  account_id: number | null;
+  personaname: string | null;
+  hero_id: number;
+  is_radiant: boolean;
+  kills: number;
+  deaths: number;
+  assists: number;
+  gold_per_min: number;
+  xp_per_min: number;
+  last_hits: number;
+  denies: number | null;
+  net_worth: number | null;
+  level: number | null;
+  hero_damage: number;
+  hero_healing: number;
+}
+
+export interface MatchDetail {
+  match_id: number;
+  start_time: number;
+  duration: number;
+  radiant_win: boolean;
+  lobby_type: number;
+  game_mode: number;
+  mode: string;
+  radiant_score: number | null;
+  dire_score: number | null;
+  average_rank: number | null;
+  players: MatchDetailPlayer[];
+  source: string;
+}
+
 export interface HeroStat {
   hero_id: number;
   localized_name: string | null;
@@ -180,6 +214,8 @@ export const getMmrHistory = (accountId: number) =>
   );
 
 export const getHeroes = () => getJson<Hero[]>('/heroes');
+
+export const getMatchDetail = (matchId: number) => getJson<MatchDetail>(`/matches/${matchId}`);
 
 export const getSyncStatus = () => getJson<SyncStatus>('/sync/status');
 

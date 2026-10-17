@@ -124,7 +124,7 @@ export default function PlayerPage() {
       {matchesQuery.isLoading && <Loading label="Loading matches…" />}
       {matchesQuery.isError && <ErrorBox error={matchesQuery.error} />}
       {matchesQuery.data !== undefined && matchesQuery.data.length > 0 && (
-        <MatchTable matches={matchesQuery.data} />
+        <MatchTable matches={matchesQuery.data} accountId={accountId} />
       )}
       {matchesQuery.data !== undefined && matchesQuery.data.length === 0 && (
         <p className="mt-2 text-sm text-slate-400">

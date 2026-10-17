@@ -32,8 +32,8 @@ async function resolveDirect(
 }
 
 export async function playersRoutes(app: FastifyInstance): Promise<void> {
-  const opendota = getOpenDotaClient();
-
+  // Client diambil per-permintaan (bukan saat registrasi) supaya bisa diganti
+  // di tes tanpa bergantung pada urutan inisialisasi.
   // Didaftarkan sebelum /players/:accountId supaya "search" tidak dibaca sebagai account_id.
   app.get('/players/search', async (request, reply) => {
     const parsed = playerSearchQuerySchema.safeParse(request.query);
@@ -45,7 +45,7 @@ export async function playersRoutes(app: FastifyInstance): Promise<void> {
     const direct = await resolveDirect(query);
     if (direct !== null) {
       try {
-        const player = await opendota.getPlayer(direct.accountId);
+        const player = await getOpenDotaClient().getPlayer(direct.accountId);
         const profile = player.profile;
         return [
           {
@@ -71,7 +71,7 @@ export async function playersRoutes(app: FastifyInstance): Promise<void> {
     }
 
     // 2. Selain itu, cari berdasarkan nama lewat OpenDota.
-    const results = await opendota.searchPlayers(query);
+    const results = await getOpenDotaClient().searchPlayers(query);
     return results.slice(0, 20).map((result) => ({ ...result, resolved_from: 'name' }));
   });
 
@@ -98,7 +98,7 @@ export async function playersRoutes(app: FastifyInstance): Promise<void> {
       };
     }
 
-    const player = await opendota.getPlayer(accountId);
+    const player = await getOpenDotaClient().getPlayer(accountId);
     if (player.profile === null) {
       return reply.code(404).send({ error: `Player ${accountId} not found` });
     }
@@ -135,7 +135,7 @@ export async function playersRoutes(app: FastifyInstance): Promise<void> {
       return stored.map((match) => ({ ...match, party_size: null, source: 'database' }));
     }
 
-    const live = await opendota.getPlayerRecentMatches(accountId);
+    const live = await getOpenDotaClient().getPlayerRecentMatches(accountId);
     return live.slice(offset, offset + limit).map((match) => {
       // Konvensi OpenDota: player_slot < 128 berarti tim Radiant.
       const isRadiant = match.player_slot < 128;

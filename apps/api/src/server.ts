@@ -7,6 +7,7 @@ import { logger } from './logger.js';
 import { OpenDotaError } from './opendota/client.js';
 import { healthRoutes } from './routes/health.js';
 import { heroesRoutes } from './routes/heroes.js';
+import { matchesRoutes } from './routes/matches.js';
 import { playerStatsRoutes } from './routes/player-stats.js';
 import { playersRoutes } from './routes/players.js';
 import { trackingRoutes } from './routes/tracking.js';
@@ -80,6 +81,7 @@ export function buildServer(): FastifyInstance {
   app.register(healthRoutes, { prefix: '/api' });
   app.register(heroesRoutes, { prefix: '/api' });
   app.register(playersRoutes, { prefix: '/api' });
+  app.register(matchesRoutes, { prefix: '/api' });
   app.register(playerStatsRoutes, { prefix: '/api' });
   app.register(trackingRoutes, { prefix: '/api' });
 
