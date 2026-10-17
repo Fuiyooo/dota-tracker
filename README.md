@@ -16,6 +16,9 @@ Sumber data:
 
 ## Development
 
+> Baru pertama kali `git clone` di mesin baru? Ikuti langkah lengkapnya di
+> **[SETUP.md](SETUP.md)** — dari memasang prasyarat sampai aplikasi jalan.
+
 ### Cara tercepat
 
 ```sh
@@ -54,7 +57,7 @@ Buka <http://localhost:5173>.
 | `pnpm dev` | API + web + watcher `shared` sekaligus |
 | `pnpm typecheck` | `tsc` untuk API, web, dan shared |
 | `pnpm lint` | ESLint |
-| `pnpm test` | 63 tes (shared + API), butuh database uji |
+| `pnpm test` | tes shared + API, butuh database uji |
 | `pnpm format` / `pnpm format:check` | Prettier |
 | `pnpm db:generate` | Buat file migrasi dari perubahan skema |
 | `pnpm db:migrate` | Terapkan migrasi |
@@ -123,9 +126,12 @@ docker compose exec api node apps/api/dist/sync/run.js <accountId>
 ## Catatan data
 
 - **MMR tidak resmi.** Valve tidak menyediakan MMR per match, dan STRATZ juga tidak
-  (`MatchPlayerType` tidak punya field MMR). Angka MMR di aplikasi ini adalah
-  estimasi `computed_mmr` OpenDota — di grafik digambar putus-putus.
-  Rank (`rank_tier`) berasal dari Valve dan andal.
+  (`MatchPlayerType` tidak punya field MMR). Grafik di halaman pemain menampilkan
+  **histori medal** (`rank_tier` — data resmi Valve). Angka `MMR ≈` adalah heuristik:
+  titik tengah bracket medal (±154 MMR per bintang) digeser `(menang - kalah) × 25`,
+  dibatasi ±154, dan hanya menghitung match Ranked (Turbo punya pool MMR sendiri).
+  `computed_mmr` dari OpenDota tetap disimpan sebagai pembanding, tetapi tidak
+  ditampilkan karena sering tidak cocok dengan medal.
 - **Target player harus mengaktifkan "Expose Public Match Data"**, kalau tidak
   match baru tidak akan muncul di OpenDota.
 - Pemain dengan profil privat tidak punya `account_id` di detail match, sehingga
