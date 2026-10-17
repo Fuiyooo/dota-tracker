@@ -92,6 +92,22 @@ docker compose up -d --build
 
 Kredensial dibaca dari `.env` di root (tidak ikut ter-commit).
 
+## Deploy ke cloud
+
+Panduan lengkap ada di **[DEPLOY.md](DEPLOY.md)**.
+
+Ringkasnya: `apps/web` ke **Vercel** (static), `apps/api` ke **Railway/Render/Fly**
+(butuh proses panjang untuk scheduler dan cache), database ke **Neon/Supabase**.
+
+Frontend membaca `VITE_API_BASE` saat build:
+
+```sh
+VITE_API_BASE=https://api-kamu.up.railway.app/api
+```
+
+Kalau variabel itu kosong, frontend memakai `/api` (cocok untuk dev dan untuk
+mode rewrite di Vercel).
+
 Isi daftar hero sekali setelah stack hidup (database container terpisah dari database dev):
 
 ```sh

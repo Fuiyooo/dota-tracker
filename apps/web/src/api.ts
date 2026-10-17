@@ -1,4 +1,17 @@
-const BASE = '/api';
+/**
+ * Basis URL API.
+ *
+ * - Lokal (dan mode rewrite di Vercel): `/api`, diteruskan proxy Vite / Vercel.
+ * - Deploy terpisah: set `VITE_API_BASE` saat build, mis.
+ *   `https://api-kamu.up.railway.app/api`.
+ *
+ * `VITE_*` di-inline saat build, jadi mengubahnya di dashboard Vercel
+ * memerlukan deploy ulang.
+ */
+const configuredBase = import.meta.env.VITE_API_BASE as string | undefined;
+const BASE = (
+  configuredBase === undefined || configuredBase === '' ? '/api' : configuredBase
+).replace(/\/+$/, '');
 
 export const HERO_IMG_CDN = 'https://cdn.cloudflare.steamstatic.com';
 
